@@ -53,6 +53,9 @@ export const signin = async (req, res) => {
         expiresIn: 86400
     })
 
+    await pool.query(`INSERT INTO login_historial (email_member, log_date) VALUES ($1, NOW())`, [userFound.rows[0].email]); 
+
+
     res.status(200).json({token: token})
 
 };

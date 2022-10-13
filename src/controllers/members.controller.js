@@ -16,7 +16,7 @@ export const signupMember = async (req, res) => {
 };
 
 export const getMembers = async (req, res) => {
-    const response = await pool.query('SELECT * FROM member');
+    const response = await pool.query('SELECT * FROM v_member');
     
 
     res.send(response.rows);
@@ -34,13 +34,19 @@ export const updateMembersById = (req, res) => {
 };
 
 export const deleteMemberById = async (req, res) => {
+    const {memberDelete} = req.body;
 
-    const {memberLoggedIn, memberDelete} = req.body;
-    res.json("Deleting member");
+    const roleFound = await pool.query(`SELECT role FROM member WHERE email = $1`, [memberDelete]);
+    
+    console.log(req.memberEmail)
+    console.log(memberDelete)
+    console.log(roleFound.rows[0].role)
 
-
-    const response = await pool.query(`CALL member_remover('${memberLoggedIn}', '${memberDelete}')`);
-    await console.log(response);
+    if(roleFound.rows[0].role == "ADMIN" || roleFound.rows[0].role == "INSPECTOR") return res.status(423).json({message: "You are not allowed to delete this member."});
+    
+    
+    await pool.query(`CALL member_remover('${req.memberEmail}', '${memberDelete}')`);
+    res.json("Member was deleted");
 
 };
 

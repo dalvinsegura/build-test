@@ -7,7 +7,7 @@ router.post('/', memberCtrl.signupMember);
 
 router.get('/', [authJwt.verifyToken, authJwt.isAdmin], memberCtrl.getMembers);
 
-router.get('/:memberId', [authJwt.verifyToken, authJwt.isAdmin], memberCtrl.getMemberById);
+router.get('/:memberId', [authJwt.verifyToken, authJwt.isAdmin, authJwt.isPremium], memberCtrl.getMemberById);
 
 router.put('/:memberId', [authJwt.verifyToken, authJwt.isAdmin], memberCtrl.updateMembersById);
 
