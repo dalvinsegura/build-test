@@ -17,6 +17,12 @@ const comparePassword = async (password, receivedPassword) => {
 export const signup = async (req, res) => {
     const { email, password, name } = req.body;
 
+    if(email == null) return res.status(400).json({menssage:"Email Undefinded"});
+
+    if(password == null) return res.status(400).json({menssage:"Password Undefinded"});
+
+    if(name == null) return res.status(400).json({menssage:"Name Undefinded"});
+
     const response = await pool.query(`CALL signup_member('${email}', '${await encryptPassword(password)}', '${name}')`);
 
     await console.log(response);
