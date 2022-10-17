@@ -4,7 +4,7 @@ export const pool = new Pool({
     host: 'localhost',
     user: 'postgres',
     password: 'user',
-    database: 'instarecibo_db_test'
-})
+    database: 'test2'
+});
 
 

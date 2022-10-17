@@ -53,17 +53,17 @@ export const isPremium = async (req, res, next) => {
   const currentDate = new Date().toISOString().split("T")[0];
 
   const m_status = memberFound.rows[0].membership_status;
-  
-  console.log(currentDate, roleMember, membership_type, m_started, m_finished);
-  
 
+  console.log(currentDate, roleMember, membership_type, m_started, m_finished);
 
   // CHECKING IF THE STATUS MEMBERSHIP STILL ACITVE OR INACTIVE
-  if(m_status !== "ACTIVA") return res.status(403).json({message: "Your membership is not active"});
+  if (m_status !== "ACTIVA")
+    return res.status(403).json({ message: "Your membership is not active" });
+
+  if (roleMember == "ADMIN") return next();
 
   // CHECKING IF THE PREMIUM MEMBERS KEEP THEIR MEMBERSHIP ACTIVED
   if (membership_type == "PREMIUM") {
-    
     // CHECK IF THE MEMBER EXPIRED, IF IT'S TRUE WILL BE UPDATED TO GRATIS
     if (m_finished <= currentDate) {
       await pool.query(`CALL assign_free_membership($1, $1);`, [
