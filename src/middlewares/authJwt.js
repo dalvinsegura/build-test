@@ -12,9 +12,10 @@ export const verifyToken = async (req, res, next) => {
     const decoded = jwt.verify(token, config.SECRET);
 
     req.memberEmail = decoded.email;
+    console.log(req.memberEmail)
 
     const userFound = await pool.query(
-      `SELECT email, role FROM member WHERE email= $1;`,
+      `SELECT email, role, membership_type FROM v_member WHERE email= $1;`,
       [req.memberEmail]
     );
 
@@ -23,9 +24,10 @@ export const verifyToken = async (req, res, next) => {
 
     req.memberRole = userFound.rows[0].role;
 
+
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Unauthorized" });
+    return res.status(401).json({ message: "Unauthorized or any problem " });
   }
 };
 

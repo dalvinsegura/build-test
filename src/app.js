@@ -5,6 +5,9 @@ import pkg from '../package.json';
 import membersRoutes from './routes/members.routes';
 import customersRoutes from './routes/customers.routes';
 import authRoutes from './routes/auth.routes';
+import loginHistorialRoutes from './routes/loginHistorial.routes';
+import databaseActivitiesRoutes from './routes/databaseActivities.routes';
+import paymentsMembershipRoutes from './routes/paymentsMembership.routes';
 
 const app = express();
 
@@ -24,6 +27,9 @@ app.get('/', (req, res) => {
 
 app.use('/api/members', membersRoutes);
 app.use('/api/customers', customersRoutes);
+app.use('/api/loginHistorial', loginHistorialRoutes);
+app.use('/api/databaseActivities', databaseActivitiesRoutes);
+app.use('/api/paymentsMembership', paymentsMembershipRoutes);
 app.use('/api/auth', authRoutes);
 
 export default app;
