@@ -3,7 +3,6 @@ const router = Router();
 import * as memberCtrl from '../controllers/members.controller';
 import { authJwt } from "../middlewares/";
 
-router.post('/', memberCtrl.signupMember);
 
 router.get('/', [authJwt.verifyToken, authJwt.isAdmin], memberCtrl.getMembers);
 

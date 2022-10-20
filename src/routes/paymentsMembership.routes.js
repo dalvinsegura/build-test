@@ -1,24 +1,18 @@
 import { Router } from "express";
 const router = Router();
 import * as paymentsMemebershipCtrl from "../controllers/paymentsMembership.controller";
-import { authJwt } from "../middlewares/";
+import { authJwt, verifyMembership } from "../middlewares/";
 
 router.get(
-  '/',
-  authJwt.verifyToken,
+  "/",
+  [authJwt.verifyToken, verifyMembership.isActiveMembership],
   paymentsMemebershipCtrl.getpaymentsMembershipForMembers
 );
 
-router.get(
-  '/givePremium',
+router.post(
+  "/givePremium",
   [authJwt.verifyToken, authJwt.isAdmin],
   paymentsMemebershipCtrl.generatePremiumPayment
 );
-
-// router.get(
-//   '/',
-//   [authJwt.verifyToken, authJwt.isAdmin],
-//   paymentsMemebershipCtrl.getpaymentsMembershipForMembers
-// );
 
 export default router;

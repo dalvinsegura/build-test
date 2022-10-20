@@ -449,3 +449,8 @@ SELECT
     *
 FROM
     payment_membership;
+
+CALL signup_member ('admin@admin.com', 'dalvin18', 'Dalvin Segura');
+UPDATE INTO member SET role = 'ADMIN' WHERE email = 'admin@admin.com';
+CALL give_admin_role ('admin@admin.com', 'admin@admin.com');
+

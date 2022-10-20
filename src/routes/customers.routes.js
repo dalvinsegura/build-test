@@ -1,11 +1,11 @@
 import {Router} from "express";
 const router = Router();
 import * as customerCtrl from '../controllers/customer.controller';
-import { authJwt } from "../middlewares/";
+import { authJwt, verifyMembership } from "../middlewares/";
 
-router.post('/', authJwt.verifyToken, customerCtrl.customerRegister);
+router.post('/', [authJwt.verifyToken, verifyMembership.isActiveMembership], customerCtrl.customerRegister);
 
-router.get('/', authJwt.verifyToken, customerCtrl.getCustomer);
+router.get('/', [authJwt.verifyToken, verifyMembership.isActiveMembership], customerCtrl.getCustomer);
 
 router.get('/:customerId', authJwt.verifyToken, customerCtrl.getCustomerById);
 

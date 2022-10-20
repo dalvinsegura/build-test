@@ -8,6 +8,7 @@ import authRoutes from './routes/auth.routes';
 import loginHistorialRoutes from './routes/loginHistorial.routes';
 import databaseActivitiesRoutes from './routes/databaseActivities.routes';
 import paymentsMembershipRoutes from './routes/paymentsMembership.routes';
+import membershipRoutes from './routes/membership.routes';
 
 const app = express();
 
@@ -30,6 +31,7 @@ app.use('/api/customers', customersRoutes);
 app.use('/api/loginHistorial', loginHistorialRoutes);
 app.use('/api/databaseActivities', databaseActivitiesRoutes);
 app.use('/api/paymentsMembership', paymentsMembershipRoutes);
+app.use('/api/membership', membershipRoutes);
 app.use('/api/auth', authRoutes);
 
 export default app;
