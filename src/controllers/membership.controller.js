@@ -1,4 +1,5 @@
 import { pool } from "../database";
+import config from "../config";
 
 export const switchToFreeMembership = async (req, res) => {
   try {
@@ -57,6 +58,11 @@ export const switchMembershipStatus = async (req, res) => {
       });
 
     membershipStatus = membershipStatus.rows[0].membership_status;
+    console.log(req.body.switchMembershipStatusTo);
+    if (req.body.switchMembershipStatusTo == config.ADMINEMAIL)
+      return res
+        .status(400)
+        .json({ menssage: "You can't alterate this member" });
 
     await pool.query(`CALL status_membership_updater($1, $2, $3)`, [
       req.memberEmail,
@@ -68,5 +74,15 @@ export const switchMembershipStatus = async (req, res) => {
     });
   } catch (error) {
     res.send(error);
+  }
+};
+
+export const getMembership = async (req, res, next) => {
+  try {
+    await pool.query(`SELECT * FROM v_member WHERE = $1`, [req.memberEmail])
+
+
+  } catch (error) {
+    res.send(error)
   }
 };

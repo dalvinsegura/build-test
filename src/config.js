@@ -1,3 +1,4 @@
 export default {
-    SECRET: 'member-api'
-}
+  SECRET: "member-api",
+  ADMINEMAIL: "admin@admin.com",
+};
