@@ -85,10 +85,12 @@ CREATE TABLE
 CREATE TABLE
     "receipt" (
         "id" SERIAL,
+        "email_member" varchar NOT NULL,
         "id_customer" INT NOT NULL,
         "date" timestamptz,
         PRIMARY KEY ("id"),
-        CONSTRAINT "FK_receipt.id_customer" FOREIGN KEY ("id_customer") REFERENCES "customer" ("id")
+        CONSTRAINT "FK_receipt.id_customer" FOREIGN KEY ("id_customer") REFERENCES "customer" ("id"),
+        CONSTRAINT "FK_receipt.email_member" FOREIGN KEY ("email_member") REFERENCES "member" ("email")
     );
 
 -- CREATING A TABLE FOR LOGIN HISTORIAL
@@ -367,14 +369,14 @@ CREATE PROCEDURE
     create_receipt (
         from_email varchar,
         to_email varchar,
-        id_customer int
+        to_id_customer int
     ) LANGUAGE plpgsql AS $$
 
 BEGIN
-	INSERT INTO receipt (id_customer, date) VALUES (id_customer, now());
+	INSERT INTO receipt (email_member, id_customer, date) VALUES (to_email, to_id_customer, now());
 	
-	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) 
-	VALUES (from_email, to_email, CONCAT('RECEIPT FOR ', (SELECT name FROM customer WHERE id = id_customer), ' ', (SELECT lastname FROM customer WHERE id = id_customer), ' WAS CREATED'), 'receipt', (SELECT role FROM member WHERE email = from_email), now());
+	INSERT INTO database_activity (from_email, "to_member", activity, affected_table, role, date) 
+	VALUES (from_email, to_email, CONCAT('RECEIPT FOR ', (SELECT name FROM customer WHERE id = to_id_customer), ' ', (SELECT lastname FROM customer WHERE id = to_id_customer), ' WAS CREATED'), 'receipt', (SELECT role FROM member WHERE email = from_email), now());
 COMMIT;
 
 	ROLLBACK;
@@ -450,11 +452,16 @@ SELECT
 FROM
     payment_membership;
 
+-- CREATING ADMIN MEMBER
 CALL
-    signup_member ('admin@admin.com', 'dalvin18', 'Dalvin Segura');
+    signup_member (
+        'admin@admin.com',
+        'dalvin18',
+        'Dalvin Segura (ADMIN)'
+    );
 
 UPDATE
-    INTO member
+    member
 SET role
     = 'ADMIN'
 WHERE
@@ -462,3 +469,7 @@ WHERE
 
 CALL
     give_admin_role ('admin@admin.com', 'admin@admin.com');
+
+call
+    member_remover ('admin@admin.com', 'admin@admin.com');
+

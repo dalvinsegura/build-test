@@ -83,7 +83,7 @@ export const getMembership = async (req, res) => {
 
     if (req.memberRole == "ADMIN") {
       const responseForAdmin = await pool.query(
-        "SELECT name, membership_type, membership_started, membership_finished, membership_status FROM v_member"
+        "SELECT email, name, membership_type, membership_started, membership_finished, membership_status FROM v_member"
       );
 
       console.log("Pasando por Admin");
@@ -91,7 +91,7 @@ export const getMembership = async (req, res) => {
       res.send(responseForAdmin.rows);
     } else if (req.memberRole == "MEMBER") {
       const responseForMember = await pool.query(
-        `SELECT name, membership_type, membership_started, membership_finished, membership_status FROM v_member WHERE email = $1`,
+        `SELECT email, name, membership_type, membership_started, membership_finished, membership_status FROM v_member WHERE email = $1`,
         [req.memberEmail]
       );
       console.log("Pasando por member");
