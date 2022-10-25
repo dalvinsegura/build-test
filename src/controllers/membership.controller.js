@@ -77,12 +77,31 @@ export const switchMembershipStatus = async (req, res) => {
   }
 };
 
-export const getMembership = async (req, res, next) => {
+export const getMembership = async (req, res) => {
   try {
-    await pool.query(`SELECT * FROM v_member WHERE = $1`, [req.memberEmail])
+    console.log(req.memberRole);
 
+    if (req.memberRole == "ADMIN") {
+      const responseForAdmin = await pool.query(
+        "SELECT name, membership_type, membership_started, membership_finished, membership_status FROM v_member"
+      );
 
+      console.log("Pasando por Admin");
+
+      res.send(responseForAdmin.rows);
+    } else if (req.memberRole == "MEMBER") {
+      const responseForMember = await pool.query(
+        `SELECT name, membership_type, membership_started, membership_finished, membership_status FROM v_member WHERE email = $1`,
+        [req.memberEmail]
+      );
+      console.log("Pasando por member");
+      res.send(responseForMember.rows[0]);
+    } else {
+      return res
+        .status(400)
+        .json({ menssage: "There's something wrong with your role" });
+    }
   } catch (error) {
-    res.send(error)
+    res.send(error);
   }
 };

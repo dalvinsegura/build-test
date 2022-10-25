@@ -3,7 +3,7 @@ const router = Router();
 import * as membershipCtrl from "../controllers/membership.controller";
 import { authJwt } from "../middlewares/";
 
-router.get('/', authJwt.verifyToken, )
+router.get("/", authJwt.verifyToken, membershipCtrl.getMembership);
 
 router.post(
   "/free",
