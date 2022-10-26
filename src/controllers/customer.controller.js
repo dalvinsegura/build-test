@@ -2,36 +2,50 @@ import { json, request } from "express";
 import { pool } from "../database";
 
 export const customerRegister = async (req, res) => {
-  const { name, lastname, address, sector, payday, paymentConcept } = req.body;
+  try {
+    const { name, lastname, address, sector, payday, paymentConcept } =
+      req.body;
 
-  const memberFound = await pool.query(
-    `SELECT membership_type FROM v_member m WHERE email = $1`,
-    [req.memberEmail]
-  );
+    const memberFound = await pool.query(
+      `SELECT membership_type FROM v_member m WHERE email = $1`,
+      [req.memberEmail]
+    );
 
-  const customersFound = await pool.query(
-    `SELECT id FROM v_customers WHERE email_member = $1`,
-    [req.memberEmail]
-  );
+    const customersFound = await pool.query(
+      `SELECT id, name, lastname FROM v_customers WHERE email_member = $1`,
+      [req.memberEmail]
+    );
 
-  if (
-    memberFound.rows[0].membership_type == "GRATIS" &&
-    customersFound.rows.length >= 3
-  )
-    return res
-      .status(403)
-      .json({
+    if (
+      memberFound.rows[0].membership_type == "GRATIS" &&
+      customersFound.rows.length >= 3
+    )
+      return res.status(403).json({
         menssage: "You only can't add 3 customers with a FREE membership",
       });
 
-  const response = await pool.query(
-    `CALL customer_register ($1, $1, $2, $3, $4, $5, $6, $7)`,
-    [req.memberEmail, name, lastname, address, sector, payday, paymentConcept]
-  );
+    const duplicateCustomerFound = await pool.query(
+      `SELECT count(id) FROM v_customers WHERE email_member = $1 AND name = $2 AND lastname = $3 AND payday = $4`,
+      [req.memberEmail, name, lastname, payday]
+    );
 
-  console.log(response);
+    console.log(parseInt(duplicateCustomerFound.rows[0].count));
+    if (parseInt(duplicateCustomerFound.rows[0].count) >= 2)
+      return res
+        .status(406)
+        .json({ menssage: "You already registered this customer" });
 
-  res.status(200).json({ message: "Customer registered successfully" });
+    await pool.query(
+      `CALL customer_register ($1, $1, $2, $3, $4, $5, $6, $7)`,
+      [req.memberEmail, name, lastname, address, sector, payday, paymentConcept]
+    );
+
+    // console.log(response);
+
+    res.status(200).json({ message: "Customer registered successfully" });
+  } catch (error) {
+    res.send(error);
+  }
 };
 
 export const getCustomer = async (req, res) => {

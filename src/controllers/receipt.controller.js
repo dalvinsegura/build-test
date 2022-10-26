@@ -17,12 +17,6 @@ export const createReceipt = async (req, res) => {
     const memberEmail = req.memberEmail;
     const customerId = parseInt(req.params.customerId);
 
-    /* 
-    HERE ARE MISSING THESE FUNCTS:
-    - FREE MEMBERSHIP: limit to 10 receipt
-    - IF the member is creating duplicate receipt (payday = current payday from the same customer id = current id)
-*/
-
     const customerFound = await pool.query(
       `SELECT id, name, lastname FROM v_customers WHERE email_member = $1 AND id = $2`,
       [memberEmail, customerId]
@@ -46,11 +40,6 @@ export const createReceipt = async (req, res) => {
         menssage: "You can only create 10 receipts with the FREE membership",
       });
     } else {
-
-      // console.log(receiptFound.rows);
-      receiptFound.rows.forEach(x => {if(x.id == 2) console.log(x)});
-      
-      // console.log(found);
 
       await pool.query(`CALL create_receipt($1, $1, $2)`, [
         memberEmail,
