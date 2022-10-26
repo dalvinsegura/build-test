@@ -40,7 +40,6 @@ export const customerRegister = async (req, res) => {
       [req.memberEmail, name, lastname, address, sector, payday, paymentConcept]
     );
 
-    // console.log(response);
 
     res.status(200).json({ message: "Customer registered successfully" });
   } catch (error) {
