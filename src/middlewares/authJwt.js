@@ -21,6 +21,7 @@ export const verifyToken = async (req, res, next) => {
       return res.status(404).json({ message: "Member not found" });
 
     req.memberRole = memberFound.rows[0].role;
+    req.memberMembershipType = memberFound.rows[0].membership_type;
 
     next();
   } catch (error) {
