@@ -1,6 +1,8 @@
 import { pool } from "../database";
 import config from "../config";
 import boom from "@hapi/boom";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 export const switchToFreeMembership = async (req, res, next) => {
   try {
@@ -55,7 +57,7 @@ export const switchMembershipStatus = async (req, res, next) => {
 
     membershipStatus = membershipStatus.rows[0].membership_status;
 
-    if (req.body.switchMembershipStatusTo == config.ADMINEMAIL)
+    if (req.body.switchMembershipStatusTo == process.env.ADMINEMAIL)
       throw boom.forbidden("You can't alterate this member");
 
     await pool.query(`CALL status_membership_updater($1, $2, $3)`, [

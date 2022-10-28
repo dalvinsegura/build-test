@@ -5,7 +5,8 @@ import validator from "validator";
 import IP from "ip";
 import boom from "@hapi/boom";
 
-import config from "../config";
+import * as dotenv from "dotenv";
+dotenv.config();
 
 const encryptPassword = async (password) => {
   const salt = await bycrypt.genSalt(10, password);
@@ -47,7 +48,7 @@ export const signup = async (req, res, next) => {
 
     await console.log(response);
 
-    const token = jwt.sign({ email: email }, config.SECRET, {
+    const token = jwt.sign({ email: email }, pro, {
       expiresIn: 86400, // 24 hours
     });
 
@@ -81,7 +82,7 @@ export const signin = async (req, res, next) => {
 
     const token = jwt.sign(
       { email: memberFound.rows[0].email },
-      config.SECRET,
+      process.env.SECRET,
       {
         expiresIn: 86400,
       }
