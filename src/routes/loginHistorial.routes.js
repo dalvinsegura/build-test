@@ -1,8 +1,8 @@
 import { Router } from "express";
 const router = Router();
 import * as loginHistorialCtrl from "../controllers/loginHistorial.controller";
-import { authJwt, verifyMembership } from "../middlewares/";
+import { authJwt } from "../middlewares/";
 
-router.get('/', [authJwt.verifyToken, verifyMembership.isActiveMembership], loginHistorialCtrl.getLoginHistorial);
+router.get("/", authJwt.verifyToken, loginHistorialCtrl.getLoginHistorial);
 
 export default router;

@@ -1,11 +1,11 @@
 import { Router } from "express";
 const router = Router();
 import * as paymentsMemebershipCtrl from "../controllers/paymentsMembership.controller";
-import { authJwt, verifyMembership } from "../middlewares/";
+import { authJwt } from "../middlewares/";
 
 router.get(
   "/",
-  [authJwt.verifyToken, verifyMembership.isActiveMembership],
+  authJwt.verifyToken,
   paymentsMemebershipCtrl.getpaymentsMembershipForMembers
 );
 

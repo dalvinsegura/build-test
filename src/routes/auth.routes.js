@@ -1,12 +1,9 @@
-import {Router} from "express";
+import { Router } from "express";
 const router = Router();
 
-import * as authCtrl from '../controllers/auth.controller';
+import * as authCtrl from "../controllers/auth.controller";
 
-
-router.post('/signup', authCtrl.signup);
-// router.post('/signin', authJwt.isPremium, authCtrl.signin);
-router.post('/signin', authCtrl.signin);
-
+router.post("/signup", authCtrl.signup);
+router.post("/signin", authCtrl.signin);
 
 export default router;

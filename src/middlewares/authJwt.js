@@ -1,12 +1,13 @@
 import jwt from "jsonwebtoken";
 import { pool } from "../database";
 import config from "../config";
+import boom from "@hapi/boom";
 
 export const verifyToken = async (req, res, next) => {
   try {
     const token = req.headers["x-access-token"];
 
-    if (!token) return res.status(403).json({ message: "Not token provided" });
+    if (!token) throw boom.conflict("Not token provided");
 
     const decoded = jwt.verify(token, config.SECRET);
 
@@ -17,63 +18,67 @@ export const verifyToken = async (req, res, next) => {
       [req.memberEmail]
     );
 
-    if (memberFound.rows.length == 0)
-      return res.status(404).json({ message: "Member not found" });
+    if (memberFound.rows.length == 0) throw boom.notFound("Member not found");
 
     req.memberRole = memberFound.rows[0].role;
     req.memberMembershipType = memberFound.rows[0].membership_type;
 
     next();
   } catch (error) {
-    return res.status(401).json({ message: "Unauthorized or any problem " });
+    next(error);
   }
 };
 
 export const isAdmin = async (req, res, next) => {
-  if (req.memberRole !== "ADMIN")
-    return res.status(406).json({ message: "You're are not an administrator" });
+  try {
+    if (req.memberRole !== "ADMIN")
+      throw boom.unauthorized("You're are not an administrator");
 
-  next();
+    next();
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const isPremium = async (req, res, next) => {
-  const memberFound = await pool.query(
-    `SELECT * FROM v_member WHERE email = $1`,
-    [req.body.email]
-  );
+  try {
+    const memberFound = await pool.query(
+      `SELECT * FROM v_member WHERE email = $1`,
+      [req.body.email]
+    );
 
-  const roleMember = memberFound.rows[0].role;
-  const membership_type = memberFound.rows[0].membership_type;
-  const m_started = new Date(memberFound.rows[0].membership_started)
-    .toISOString()
-    .split("T")[0];
-  const m_finished = new Date(memberFound.rows[0].membership_finished)
-    .toISOString()
-    .split("T")[0];
-  const currentDate = new Date().toISOString().split("T")[0];
+    const roleMember = memberFound.rows[0].role;
+    const membership_type = memberFound.rows[0].membership_type;
 
-  const m_status = memberFound.rows[0].membership_status;
+    const m_started = new Date(memberFound.rows[0].membership_started)
+      .toISOString()
+      .split("T")[0];
+    const m_finished = new Date(memberFound.rows[0].membership_finished)
+      .toISOString()
+      .split("T")[0];
+    const currentDate = new Date().toISOString().split("T")[0];
 
-  console.log(currentDate, roleMember, membership_type, m_started, m_finished);
+    const m_status = memberFound.rows[0].membership_status;
 
-  // CHECKING IF THE STATUS MEMBERSHIP STILL ACITVE OR INACTIVE
-  if (m_status !== "ACTIVA")
-    return res.status(403).json({ message: "Your membership is not active" });
+    // CHECKING IF THE STATUS MEMBERSHIP STILL ACITVE OR INACTIVE
+    if (m_status !== "ACTIVA")
+      throw boom.conflict("Your membership is not active");
 
-  if (roleMember == "ADMIN") return next();
+    if (roleMember == "ADMIN") return next();
 
-  // CHECKING IF THE PREMIUM MEMBERS KEEP THEIR MEMBERSHIP ACTIVED
-  if (membership_type == "PREMIUM") {
-    // CHECK IF THE MEMBER EXPIRED, IF IT'S TRUE WILL BE UPDATED TO GRATIS
-    if (m_finished <= currentDate) {
-      await pool.query(`CALL assign_free_membership($1, $1);`, [
-        req.body.email,
-      ]);
+    // CHECKING IF THE PREMIUM MEMBERS KEEP THEIR MEMBERSHIP ACTIVED
+    if (membership_type == "PREMIUM") {
+      // CHECK IF THE MEMBER EXPIRED, IF IT'S TRUE WILL BE UPDATED TO GRATIS
+      if (m_finished <= currentDate) {
+        await pool.query(`CALL assign_free_membership($1, $1);`, [
+          req.body.email,
+        ]);
 
-      return res.json({
-        message: "Your membership has expired at " + currentDate,
-      });
+        throw boom.conflict(`Your membership has expired at ${currentDate}`);
+      }
     }
+    next();
+  } catch (error) {
+    next(error);
   }
-  next();
 };
