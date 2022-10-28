@@ -3,6 +3,7 @@ import bycrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import validator from "validator";
 import IP from "ip";
+import boom from "@hapi/boom";
 
 import config from "../config";
 
@@ -16,79 +17,85 @@ const comparePassword = async (password, receivedPassword) => {
   return await bycrypt.compare(password, receivedPassword);
 };
 
-export const signup = async (req, res) => {
-  const { email, password, name } = req.body;
+export const signup = async (req, res, next) => {
+  try {
+    const { email, password, name } = req.body;
 
-  
+    const memberFound = await pool.query(
+      `SELECT email FROM v_member WHERE email = $1`,
+      [email]
+    );
 
-  const memberFound = await pool.query(
-    `SELECT email FROM v_member WHERE email = $1`,
-    [email]
-  );
+    // REPLACE TO EXPRESS VALIDATOR DEPENDECY
+    if (memberFound.rows.length !== 0)
+      return res.status(400).json({ menssage: "You already have an account" });
 
-  if (memberFound.rows.length !== 0)
-    return res.status(400).json({ menssage: "You already have an account" });
+    if (email == null)
+      return res.status(400).json({ menssage: "Email Undefinded" });
 
-  if (email == null)
-    return res.status(400).json({ menssage: "Email Undefinded" });
+    if (password == null)
+      return res.status(400).json({ menssage: "Password Undefinded" });
 
-  if (password == null)
-    return res.status(400).json({ menssage: "Password Undefinded" });
+    if (name == null)
+      return res.status(400).json({ menssage: "Name Undefinded" });
 
-  if (name == null)
-    return res.status(400).json({ menssage: "Name Undefinded" });
+    const response = await pool.query(
+      `CALL signup_member('${email}', '${await encryptPassword(
+        password
+      )}', '${name}')`
+    );
 
-  const response = await pool.query(
-    `CALL signup_member('${email}', '${await encryptPassword(
-      password
-    )}', '${name}')`
-  );
+    await console.log(response);
 
-  await console.log(response);
+    const token = jwt.sign({ email: email }, config.SECRET, {
+      expiresIn: 86400, // 24 hours
+    });
 
-  const token = jwt.sign({ email: email }, config.SECRET, {
-    expiresIn: 86400, // 24 hours
-  });
-
-  res.json({ token });
+    res.json({ token });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const signin = async (req, res) => {
-  const { email, password } = req.body;
-  const ipAddress = IP.address();
+export const signin = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+    const ipAddress = IP.address();
 
-  // VERIFYING IF THE MEMBER EXISTS ON THE DATA BASE
-  const memberFound = await pool.query(
-    `SELECT * FROM v_member WHERE email= $1;`,
-    [email]
-  );
+    // VERIFYING IF THE MEMBER EXISTS ON THE DATA BASE
+    const memberFound = await pool.query(
+      `SELECT * FROM v_member WHERE email= $1;`,
+      [email]
+    );
 
-  if (memberFound.rows.length == 0)
-    return res.status(400).json({ message: "Member not found" });
+    if (memberFound.rows.length == 0) throw boom.notFound("Member not found");
 
-  // COMPARING THE PASSWORD
-  const matchPassword = await comparePassword(
-    password,
-    memberFound.rows[0].password
-  );
+    // COMPARING THE PASSWORD
+    const matchPassword = await comparePassword(
+      password,
+      memberFound.rows[0].password
+    );
 
-  // IF IT'S TRUE RETURN MEMBER'S DATA
-  if (!matchPassword)
-    return res
-      .status(401)
-      .json({ token: null, message: "Password is incorrect" });
+    // IF IT'S TRUE RETURN MEMBER'S DATA
+    if (!matchPassword) throw boom.unauthorized("Password is incorrect");
 
-  const token = jwt.sign({ email: memberFound.rows[0].email }, config.SECRET, {
-    expiresIn: 86400,
-  });
+    const token = jwt.sign(
+      { email: memberFound.rows[0].email },
+      config.SECRET,
+      {
+        expiresIn: 86400,
+      }
+    );
 
-  if (memberFound.rows[0].membership_status !== "ACTIVA")
-    return res.status(403).json({ message: "Your membership is not active" });
+    if (memberFound.rows[0].membership_status !== "ACTIVA")
+      throw boom.unauthorized("Your membership is not active");
 
-  await pool.query(
-    `INSERT INTO login_historial (email_member, ip_address,log_date) VALUES ($1, $2, NOW())`,
-    [memberFound.rows[0].email, ipAddress]
-  );
-
-  res.status(200).json({ token: token });
+    await pool.query(
+      `INSERT INTO login_historial (email_member, ip_address,log_date) VALUES ($1, $2, NOW())`,
+      [memberFound.rows[0].email, ipAddress]
+    );
+    res.status(200).json({ token: token });
+  } catch (error) {
+    next(error);
+  }
 };

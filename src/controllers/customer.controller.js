@@ -1,7 +1,8 @@
 import { json, request } from "express";
 import { pool } from "../database";
+import boom from "@hapi/boom";
 
-export const customerRegister = async (req, res) => {
+export const customerRegister = async (req, res, next) => {
   try {
     const { name, lastname, address, sector, payday, paymentConcept } =
       req.body;
@@ -20,9 +21,9 @@ export const customerRegister = async (req, res) => {
       memberFound.rows[0].membership_type == "GRATIS" &&
       customersFound.rows.length >= 3
     )
-      return res.status(403).json({
-        menssage: "You only can't add 3 customers with a FREE membership",
-      });
+      throw boom.unauthorized(
+        "You only can't add 3 customers with a FREE membership"
+      );
 
     const duplicateCustomerFound = await pool.query(
       `SELECT count(id) FROM v_customers WHERE email_member = $1 AND name = $2 AND lastname = $3 AND payday = $4`,
@@ -31,23 +32,20 @@ export const customerRegister = async (req, res) => {
 
     console.log(parseInt(duplicateCustomerFound.rows[0].count));
     if (parseInt(duplicateCustomerFound.rows[0].count) >= 2)
-      return res
-        .status(406)
-        .json({ menssage: "You already registered this customer" });
+      throw boom.conflict("You already registered this customer");
 
     await pool.query(
       `CALL customer_register ($1, $1, $2, $3, $4, $5, $6, $7)`,
       [req.memberEmail, name, lastname, address, sector, payday, paymentConcept]
     );
 
-
-    res.status(200).json({ message: "Customer registered successfully" });
+    res.status(201).json({ message: "Customer registered successfully" });
   } catch (error) {
-    res.send(error);
+    next(error);
   }
 };
 
-export const getCustomer = async (req, res) => {
+export const getCustomer = async (req, res, next) => {
   try {
     const customerFounded = await pool.query(
       `SELECT * FROM v_customers WHERE email_member = $1 OR (SELECT role FROM v_member WHERE email = $1) = 'ADMIN' OR (SELECT role FROM v_member WHERE email = $1) = 'INSPECTOR'`,
@@ -55,15 +53,15 @@ export const getCustomer = async (req, res) => {
     );
 
     if (customerFounded.rows.length == 0)
-      return res.status(404).json({ error: "You don't have customers yet" });
+      throw boom.notFound("You don't have customers yet");
 
-    res.send(customerFounded.rows);
+    res.status(200).send(customerFounded.rows);
   } catch (error) {
-    res.json({ error: error });
+    next(error);
   }
 };
 
-export const getCustomerById = async (req, res) => {
+export const getCustomerById = async (req, res, next) => {
   try {
     const customerFounded = await pool.query(
       `SELECT * FROM v_customers WHERE email_member = $1 AND id = $2`,
@@ -71,15 +69,15 @@ export const getCustomerById = async (req, res) => {
     );
 
     if (customerFounded.rows.length == 0)
-      return res.status(404).json({ message: "Customer not found" });
+      throw boom.notFound("Customer not found");
 
-    return res.send(customerFounded.rows[0]);
+    return res.status(200).send(customerFounded.rows[0]);
   } catch (error) {
-    return res.send(error);
+    next(error);
   }
 };
 
-export const deleteCustomerById = async (req, res) => {
+export const deleteCustomerById = async (req, res, next) => {
   try {
     const memberFound = await pool.query(
       `SELECT membership_type FROM v_member WHERE email = $1`,
@@ -87,9 +85,9 @@ export const deleteCustomerById = async (req, res) => {
     );
     console.log(memberFound.rows[0].membership_type);
     if (memberFound.rows[0].membership_type == "GRATIS")
-      return res
-        .status(403)
-        .json({ menssage: "You can't delete customer with a FREE membership" });
+      throw boom.unauthorized(
+        "You can't delete customer with a FREE membership"
+      );
 
     const customerFounded = await pool.query(
       `SELECT id FROM v_customers WHERE email_member = $1 AND id = $2`,
@@ -97,13 +95,13 @@ export const deleteCustomerById = async (req, res) => {
     );
 
     if (customerFounded.rows.length == 0)
-      return res.status(404).json({ message: "Customer not found" });
+      throw boom.notFound("Customer not found");
 
     await pool.query(
       `CALL customer_remover('${req.memberEmail}', '${req.memberEmail}', '${req.params.customerId}')`
     );
-    res.json("Customer Deleteted Successfully");
+    res.status(204).json("Customer Deleteted Successfully");
   } catch (error) {
-    res.send(error);
+    next(error);
   }
 };

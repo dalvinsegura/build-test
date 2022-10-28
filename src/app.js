@@ -11,6 +11,9 @@ import databaseActivitiesRoutes from "./routes/databaseActivities.routes";
 import paymentsMembershipRoutes from "./routes/paymentsMembership.routes";
 import membershipRoutes from "./routes/membership.routes";
 
+import {logErrors, errorHandler, boomErrorHandler} from "./middlewares/error.handler";
+
+
 const app = express();
 
 app.set("pkg", pkg);
@@ -34,5 +37,9 @@ app.use("/api/databaseActivities", databaseActivitiesRoutes);
 app.use("/api/paymentsMembership", paymentsMembershipRoutes);
 app.use("/api/membership", membershipRoutes);
 app.use("/api/auth", authRoutes);
+
+app.use(logErrors);
+app.use(boomErrorHandler);
+app.use(errorHandler);
 
 export default app;

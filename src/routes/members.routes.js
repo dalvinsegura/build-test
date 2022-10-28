@@ -6,9 +6,7 @@ import { authJwt } from "../middlewares/";
 
 router.get('/', [authJwt.verifyToken, authJwt.isAdmin], memberCtrl.getMembers);
 
-router.get('/:memberId', [authJwt.verifyToken, authJwt.isAdmin, authJwt.isPremium], memberCtrl.getMemberById);
-
-router.put('/:memberId', [authJwt.verifyToken, authJwt.isAdmin], memberCtrl.updateMembersById);
+router.get('/me', authJwt.verifyToken, memberCtrl.getMemberByEmail);
 
 router.delete('/', [authJwt.verifyToken, authJwt.isAdmin], memberCtrl.deleteMemberById);
 

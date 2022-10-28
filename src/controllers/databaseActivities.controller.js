@@ -1,7 +1,11 @@
 import { pool } from "../database";
 
-export const getDatabaseActivities = async (req, res) => {
+export const getDatabaseActivities = async (req, res, next) => {
+try {
   console.log(req.memberRole);
   const response = await pool.query("SELECT * FROM v_database_activities");
-  res.send(response.rows);
+  res.status(200).send(response.rows);
+} catch (error) {
+  next(error);
+}
 };
