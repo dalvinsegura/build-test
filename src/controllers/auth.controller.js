@@ -1,6 +1,7 @@
 import { pool } from "../database";
 import bycrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import validator from "validator";
 import IP from "ip";
 
 import config from "../config";
@@ -17,6 +18,8 @@ const comparePassword = async (password, receivedPassword) => {
 
 export const signup = async (req, res) => {
   const { email, password, name } = req.body;
+
+  
 
   const memberFound = await pool.query(
     `SELECT email FROM v_member WHERE email = $1`,
