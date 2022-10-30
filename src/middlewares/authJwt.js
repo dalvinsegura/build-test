@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import { pool } from "../database";
-import config from "../config";
 import boom from "@hapi/boom";
 
 export const verifyToken = async (req, res, next) => {

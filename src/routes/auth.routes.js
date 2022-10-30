@@ -3,7 +3,10 @@ const router = Router();
 
 import * as authCtrl from "../controllers/auth.controller";
 
-router.post("/signup", authCtrl.signup);
-router.post("/signin", authCtrl.signin);
+import validatorHandler from "../middlewares/validator.handler";
+import { signupSchema, signinSchema } from "../schemas/auth.schema";
+
+router.post("/signup", validatorHandler(signupSchema, 'body'),  authCtrl.signup);
+router.post("/signin", validatorHandler(signinSchema, 'body'), authCtrl.signin);
 
 export default router;

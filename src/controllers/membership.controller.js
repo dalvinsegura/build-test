@@ -1,5 +1,4 @@
 import { pool } from "../database";
-import config from "../config";
 import boom from "@hapi/boom";
 import * as dotenv from "dotenv";
 dotenv.config();
