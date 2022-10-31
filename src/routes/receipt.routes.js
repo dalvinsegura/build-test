@@ -2,11 +2,25 @@ import { Router } from "express";
 const router = Router();
 import * as receiptCtrl from "../controllers/receipt.controller";
 import { authJwt } from "../middlewares/";
+import validatorHandler from "../middlewares/validator.handler";
+import {
+  getReceipts,
+  createReceiptBody,
+  createReceiptParams,
+} from "../schemas/receipt.schema";
 
-router.get("/", authJwt.verifyToken, receiptCtrl.getReceipts);
+router.get(
+  "/",
+  [authJwt.verifyToken, validatorHandler(getReceipts, "body")],
+  receiptCtrl.getReceipts
+);
 router.get(
   "/create/:customerId",
-  authJwt.verifyToken,
+  [
+    authJwt.verifyToken,
+    validatorHandler(createReceiptBody, "body"),
+    validatorHandler(createReceiptParams, "params"),
+  ],
   receiptCtrl.createReceipt
 );
 

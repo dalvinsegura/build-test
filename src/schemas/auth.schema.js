@@ -1,7 +1,7 @@
 import Joi from "joi";
 
 const email = Joi.string().email();
-const name = Joi.string().alphanum().min(3).max(15);
+const name = Joi.string().min(3).max(15);
 const password = Joi.string().pattern(new RegExp('^[a-zA-Z0-9]{3,30}$'));
 
 export const  signupSchema = Joi.object({

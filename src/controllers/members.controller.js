@@ -1,19 +1,5 @@
 import { pool } from "../database";
-import boom from "@hapi/boom";
-
-export const signupMember = async (req, res, next) => {
-  try {
-    const { email, password, name } = req.body;
-
-    const response = await pool.query(
-      `CALL signup_member('${email}', '${password}', '${name}')`
-    );
-
-    res.status(204).json({ message: "You were signed up successfully" });
-  } catch (error) {
-    next(error);
-  }
-};
+import boom from "@hapi/boom"; 
 
 export const getMembers = async (req, res, next) => {
   try {

@@ -2,16 +2,36 @@ import { Router } from "express";
 const router = Router();
 import * as customerCtrl from "../controllers/customer.controller";
 import { authJwt } from "../middlewares/";
+import validatorHandler from "../middlewares/validator.handler";
 
-router.post("/", authJwt.verifyToken, customerCtrl.customerRegister);
+import {
+  customerRegisterSchema,
+  getCustomersSchema,
+  getCustomerByIdSchema,
+  deleteCustomerByIdSchema,
+} from "../schemas/customers.schema";
 
-router.get("/", authJwt.verifyToken, customerCtrl.getCustomer);
+router.post(
+  "/",
+  [authJwt.verifyToken, validatorHandler(customerRegisterSchema, "body")],
+  customerCtrl.customerRegister
+);
 
-router.get("/:customerId", authJwt.verifyToken, customerCtrl.getCustomerById);
+router.get(
+  "/",
+  [authJwt.verifyToken, validatorHandler(getCustomersSchema, "body")],
+  customerCtrl.getCustomer
+);
+
+router.get(
+  "/:customerId",
+  [authJwt.verifyToken, validatorHandler(getCustomerByIdSchema, "params")],
+  customerCtrl.getCustomerById
+);
 
 router.delete(
   "/:customerId",
-  authJwt.verifyToken,
+  [authJwt.verifyToken, validatorHandler(deleteCustomerByIdSchema, "params")],
   customerCtrl.deleteCustomerById
 );
 

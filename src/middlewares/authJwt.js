@@ -2,13 +2,16 @@ import jwt from "jsonwebtoken";
 import { pool } from "../database";
 import boom from "@hapi/boom";
 
+import * as dotenv from "dotenv";
+dotenv.config();
+
 export const verifyToken = async (req, res, next) => {
   try {
     const token = req.headers["x-access-token"];
 
     if (!token) throw boom.conflict("Not token provided");
 
-    const decoded = jwt.verify(token, config.SECRET);
+    const decoded = jwt.verify(token, process.env.SECRET);
 
     req.memberEmail = decoded.email;
 

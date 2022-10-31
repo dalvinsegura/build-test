@@ -31,7 +31,7 @@ export const customerRegister = async (req, res, next) => {
     );
 
     console.log(parseInt(duplicateCustomerFound.rows[0].count));
-    if (parseInt(duplicateCustomerFound.rows[0].count) >= 2)
+    if (parseInt(duplicateCustomerFound.rows[0].count) >= 1)
       throw boom.conflict("You already registered this customer");
 
     await pool.query(
@@ -63,6 +63,7 @@ export const getCustomer = async (req, res, next) => {
 
 export const getCustomerById = async (req, res, next) => {
   try {
+    
     const customerFounded = await pool.query(
       `SELECT * FROM v_customers WHERE email_member = $1 AND id = $2`,
       [req.memberEmail, req.params.customerId]
