@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import validator from "validator";
 import IP from "ip";
 import boom from "@hapi/boom";
+import nodemailer from "nodemailer";
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -51,6 +52,43 @@ export const signup = async (req, res, next) => {
     const token = jwt.sign({ email: email }, process.env.SECRET, {
       expiresIn: 86400, // 24 hours
     });
+
+    // MAILING
+    const mailingHandler = (mailConfirmationTo, name) => {
+      try {
+        const transporter = nodemailer.createTransport({
+          host: process.env.HOST_MAIL,
+          port: process.env.PORT_MAIL,
+          secure: false,
+          auth: {
+            user: process.env.USER_MAIL,
+            pass: process.env.PASS_MAIL,
+          },
+        });
+
+        const mailOption = {
+          from: "Instarecibo Team <servicio.instarecibo@outlook.com>",
+          to: mailConfirmationTo,
+          subject: "Confirmación de registro",
+          text: `
+     Hola, ${name}.\n\n\nGracias por formar parte de Instarecibo y interesarte en nuestra aplicación.\n\nEstos son tus datos de acceso:\n\nDirección de correo electrónico: ${mailConfirmationTo}\n\nUn saludo,\n\n El equipo de Instarecibo
+     
+     `,
+        };
+
+        transporter.sendMail(mailOption, (error, info) => {
+          if (error) {
+            throw boom.badRequest("Your email wasn't sent", error);
+          } else {
+            res.status(200).json({ message: "Email sent successfully!" });
+          }
+        });
+      } catch (error) {
+        next(error);
+      }
+    };
+
+    // mailingHandler(email, name);
 
     res.json({ token });
   } catch (error) {
