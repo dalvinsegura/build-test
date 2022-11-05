@@ -84,7 +84,8 @@ export const deleteCustomerById = async (req, res, next) => {
       `SELECT membership_type FROM v_member WHERE email = $1`,
       [req.memberEmail]
     );
-    console.log(memberFound.rows[0].membership_type);
+
+    console.log(req.memberRole);
     if (memberFound.rows[0].membership_type == "GRATIS")
       throw boom.unauthorized(
         "You can't delete customer with a FREE membership"
@@ -99,9 +100,11 @@ export const deleteCustomerById = async (req, res, next) => {
       throw boom.notFound("Customer not found");
 
     await pool.query(
-      `CALL customer_remover('${req.memberEmail}', '${req.memberEmail}', '${req.params.customerId}')`
+      `CALL customer_remover($1, $1, $2)`, [req.memberEmail, req.params.customerId]
     );
-    res.status(204).json("Customer Deleteted Successfully");
+    console.log("Test 1")
+    res.status(200).json({message: "Customer Deleteted Successfully"});
+    console.log("Test 2")
   } catch (error) {
     next(error);
   }

@@ -1,6 +1,7 @@
 set
     timezone to 'America/Santo_Domingo';
 
+
 -- CREATING ROLE TABLE
 CREATE TABLE
     "role" (
@@ -17,7 +18,7 @@ CREATE TABLE
         "password" varchar(255) NOT NULL,
         "name" varchar NOT NULL,
         "role" varchar NOT NULL,
-        "date" timestamptz,
+        "date" TIMESTAMP,
         PRIMARY KEY ("email"),
         CONSTRAINT "FK_member.role" FOREIGN KEY ("role") REFERENCES "role" ("role")
     );
@@ -40,8 +41,8 @@ CREATE TABLE
         "id" SERIAL,
         "email_member" varchar NOT NULL UNIQUE,
         "type" varchar NOT NULL DEFAULT 'GRATIS',
-        "started" timestamptz,
-        "finished" timestamptz,
+        "started" TIMESTAMP,
+        "finished" TIMESTAMP,
         "status" varchar,
         PRIMARY KEY ("id"),
         CONSTRAINT "FK_membership.email_member" FOREIGN KEY ("email_member") REFERENCES "member" ("email"),
@@ -56,10 +57,10 @@ CREATE TABLE
         "email_member" varchar NOT NULL,
         "type" varchar NOT NULL,
         "months" int,
-        "started" timestamptz,
-        "finished" timestamptz,
+        "started" TIMESTAMP,
+        "finished" TIMESTAMP,
         "price_month" money,
-        "date_payment" timestamptz,
+        "date_payment" TIMESTAMP,
         PRIMARY KEY ("id"),
         CONSTRAINT "FK_payment_membership.email_member" FOREIGN KEY ("email_member") REFERENCES "member" ("email"),
         CONSTRAINT "FK_type_membership.type" FOREIGN KEY ("type") REFERENCES "type_membership" ("type")
@@ -76,7 +77,7 @@ CREATE TABLE
         "sector" varchar(40),
         "payday" date NOT NULL,
         "payment_concept" money,
-        "date" timestamptz,
+        "date" TIMESTAMP,
         PRIMARY KEY ("id"),
         CONSTRAINT "FK_customer.email_member" FOREIGN KEY ("email_member") REFERENCES "member" ("email")
     );
@@ -87,7 +88,7 @@ CREATE TABLE
         "id" SERIAL,
         "email_member" varchar NOT NULL,
         "id_customer" INT NOT NULL,
-        "date" timestamptz,
+        "date" TIMESTAMP,
         PRIMARY KEY ("id"),
         CONSTRAINT "FK_receipt.id_customer" FOREIGN KEY ("id_customer") REFERENCES "customer" ("id"),
         CONSTRAINT "FK_receipt.email_member" FOREIGN KEY ("email_member") REFERENCES "member" ("email")
@@ -99,7 +100,7 @@ CREATE TABLE
         "id" SERIAL,
         "email_member" varchar NOT NULL,
         "ip_address" varchar(15),
-        "log_date" timestamptz,
+        "log_date" TIMESTAMP,
         PRIMARY KEY ("id"),
         CONSTRAINT "FK_login_historial.email_member" FOREIGN KEY ("email_member") REFERENCES "member" ("email")
     );
@@ -112,7 +113,7 @@ CREATE TABLE
         "activity" varchar,
         "affected_table" varchar,
         "role" varchar,
-        "date" timestamptz,
+        "date" TIMESTAMP,
         CONSTRAINT "FK_database_activity.role" FOREIGN KEY ("role") REFERENCES "role" ("role")
     );
 
@@ -469,7 +470,4 @@ WHERE
 
 CALL
     give_admin_role ('admin@admin.com', 'admin@admin.com');
-
-call
-    member_remover ('admin@admin.com', 'admin@admin.com');
 

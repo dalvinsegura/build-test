@@ -14,7 +14,8 @@ router.get(
   [authJwt.verifyToken, validatorHandler(getReceipts, "body")],
   receiptCtrl.getReceipts
 );
-router.get(
+
+router.post(
   "/create/:customerId",
   [
     authJwt.verifyToken,

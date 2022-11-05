@@ -6,6 +6,6 @@ const memberEmail = Joi.string().email();
 
 
 export const getLoginHistorialSchema = Joi.object({
-    memberRole: memberRole.required(),
+    memberRole: memberRole,
     memberEmail: memberEmail,
   });

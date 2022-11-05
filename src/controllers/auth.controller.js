@@ -48,7 +48,7 @@ export const signup = async (req, res, next) => {
 
     await console.log(response);
 
-    const token = jwt.sign({ email: email }, pro, {
+    const token = jwt.sign({ email: email }, process.env.SECRET, {
       expiresIn: 86400, // 24 hours
     });
 
@@ -92,7 +92,7 @@ export const signin = async (req, res, next) => {
       throw boom.unauthorized("Your membership is not active");
 
     await pool.query(
-      `INSERT INTO login_historial (email_member, ip_address,log_date) VALUES ($1, $2, NOW())`,
+      `INSERT INTO login_historial (email_member, ip_address,log_date) VALUES ($1, $2, (SELECT CURRENT_TIMESTAMP))`,
       [memberFound.rows[0].email, ipAddress]
     );
     res.status(200).json({ token: token });
