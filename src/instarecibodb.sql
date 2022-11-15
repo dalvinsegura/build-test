@@ -17,7 +17,9 @@ CREATE TABLE
         "email" varchar NOT NULL,
         "password" varchar(255) NOT NULL,
         "name" varchar NOT NULL,
+        "lastname" varchar NOT NULL,
         "role" varchar NOT NULL,
+        "verified" boolean NOT NULL DEFAULT false,
         "date" TIMESTAMP,
         PRIMARY KEY ("email"),
         CONSTRAINT "FK_member.role" FOREIGN KEY ("role") REFERENCES "role" ("role")
@@ -119,7 +121,7 @@ CREATE TABLE
 
 -- INSERTING THE STATIC ROLES
 INSERT INTO
-    role (role, description)
+    role ("role", "description")
 VALUES
     (
         'ADMIN',
@@ -127,7 +129,7 @@ VALUES
     );
 
 INSERT INTO
-    role (role, description)
+    role ("role", "description")
 VALUES
     (
         'INSPECTOR',
@@ -135,7 +137,7 @@ VALUES
     );
 
 INSERT INTO
-    role (role, description)
+    role ("role", description)
 VALUES
     (
         'MEMBER',
@@ -188,10 +190,11 @@ CREATE PROCEDURE
     signup_member (
         email_recived varchar,
         password varchar,
-        name varchar
+        name varchar,
+        lastname varchar
     ) LANGUAGE plpgsql AS $$
 BEGIN
-	INSERT INTO member (email, password, name, role, date) VALUES (email_recived, password, name, 'MEMBER', now());
+	INSERT INTO member (email, password, name, lastname, role, date) VALUES (email_recived, password, name, lastname, 'MEMBER', now());
 COMMIT;
 	INSERT INTO membership (email_member, type, status) VALUES ((SELECT email FROM member WHERE email = email_recived), 'GRATIS', (SELECT status FROM status_membership WHERE status = 'ACTIVA'));
 COMMIT;
@@ -231,6 +234,21 @@ COMMIT;
 COMMIT;
 	ROLLBACK;
 END;
+$$;
+
+-- STORED PROCEDURE: VERIFY A MEMBER
+CREATE PROCEDURE verify_member(verified_from_email varchar, email_to_verify varchar, verificationStatus boolean) 
+LANGUAGE plpgsql AS 
+$$
+
+BEGIN
+
+UPDATE member set verified = verificationStatus WHERE email = email_to_verify;
+INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (verified_from_email, email_to_verify, concat('MEMBER VERIFICATION STATUS NOW IS ', verificationStatus) , 'member', (SELECT role FROM member WHERE email = verified_from_email), now());
+
+COMMIT;
+END;
+
 $$;
 
 -- STORED PROCEDURE: GENERATE A PREMIUM PAYMENT AND GIVE PREMIUM
@@ -394,7 +412,9 @@ SELECT
     m.email,
     m.password,
     m.name,
+    m.lastname,
     m.role,
+    m.verified,
     m.date as date_registred,
     ms.type as membership_type,
     ms.started as membership_started,
@@ -407,7 +427,9 @@ GROUP BY
     m.email,
     m.password,
     m.name,
+    m.lastname,
     m.role,
+    m.verified,
     ms.type,
     ms.started,
     ms.finished,
@@ -454,12 +476,6 @@ FROM
     payment_membership;
 
 -- CREATING ADMIN MEMBER
-CALL
-    signup_member (
-        'admin@admin.com',
-        'dalvin18',
-        'Dalvin Segura (ADMIN)'
-    );
 
 UPDATE
     member
@@ -471,3 +487,5 @@ WHERE
 CALL
     give_admin_role ('admin@admin.com', 'admin@admin.com');
 
+
+ 

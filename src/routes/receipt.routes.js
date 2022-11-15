@@ -30,7 +30,7 @@ router.post(
   [
     authJwt.verifyToken,
     validatorHandler(createReceiptBody, "body"),
-    validatorHandler(createReceiptParams, "params"),
+    validatorHandler(createReceiptParams, "params")
   ],
   receiptCtrl.createReceipt
 );

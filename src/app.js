@@ -6,6 +6,7 @@ import membersRoutes from "./routes/members.routes";
 import customersRoutes from "./routes/customers.routes";
 import receiptRoutes from "./routes/receipt.routes";
 import authRoutes from "./routes/auth.routes";
+import emailVerificationRoutes from "./routes/emailVerification.routes";
 import loginHistorialRoutes from "./routes/loginHistorial.routes";
 import databaseActivitiesRoutes from "./routes/databaseActivities.routes";
 import paymentsMembershipRoutes from "./routes/paymentsMembership.routes";
@@ -37,6 +38,7 @@ app.use("/api/databaseActivities", databaseActivitiesRoutes);
 app.use("/api/paymentsMembership", paymentsMembershipRoutes);
 app.use("/api/membership", membershipRoutes);
 app.use("/api/auth", authRoutes);
+app.use("/account/verification", emailVerificationRoutes);
 
 app.use(logErrors);
 app.use(boomErrorHandler);
