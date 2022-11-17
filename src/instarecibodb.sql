@@ -1,7 +1,6 @@
 set
     timezone to 'America/Santo_Domingo';
 
-
 -- CREATING ROLE TABLE
 CREATE TABLE
     "role" (
@@ -161,7 +160,7 @@ INSERT INTO
             price_month
     )
 VALUES
-    ('PRUEBA GRATIS', 0);
+    ('PREMIUM', 750);
 
 INSERT INTO
     type_membership (
@@ -170,7 +169,7 @@ INSERT INTO
             price_month
     )
 VALUES
-    ('PREMIUM', 500);
+    ('LIFETIME', 10500);
 
 -- INSERTING STATUS MEMBERSHIP
 INSERT INTO
@@ -237,9 +236,12 @@ END;
 $$;
 
 -- STORED PROCEDURE: VERIFY A MEMBER
-CREATE PROCEDURE verify_member(verified_from_email varchar, email_to_verify varchar, verificationStatus boolean) 
-LANGUAGE plpgsql AS 
-$$
+CREATE PROCEDURE
+    verify_member (
+        verified_from_email varchar,
+        email_to_verify varchar,
+        verificationStatus boolean
+    ) LANGUAGE plpgsql AS $$
 
 BEGIN
 
@@ -275,6 +277,31 @@ COMMIT;
 	WHERE email_member = to_email;
 	
 	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, 'UPDATED TO PREMIUM', 'membership', (SELECT role FROM member WHERE email = from_email), now());
+COMMIT;
+ROLLBACK;
+
+END;
+$$;
+
+-- STORED PROCEDURE: GENERATE A LIFETIME PAYMENT AND GIVE LIFETIME
+CREATE PROCEDURE
+    create_lifetime_payment (from_email varchar, to_email varchar) LANGUAGE plpgsql AS $$
+BEGIN
+
+	INSERT INTO payment_membership (email_member, type, months, started, finished, price_month, date_payment)
+	VALUES (to_email, 'LIFETIME', null, null, null, (SELECT price_month FROM type_membership WHERE type = 'LIFETIME' ORDER BY price_month desc LIMIT 1), NOW());
+
+	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, 'PAYMENT INSERTION' , 'payment_membership', (SELECT role FROM member WHERE email = from_email), now());
+COMMIT;
+
+	UPDATE member SET role = 'MEMBER' WHERE email = to_email;
+	
+COMMIT;
+
+	UPDATE membership SET type = 'LIFETIME', started = null, finished = null, status = (SELECT status FROM status_membership WHERE status = 'ACTIVA')
+	WHERE email_member = to_email;
+	
+	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, 'UPDATED TO LIFETIME', 'membership', (SELECT role FROM member WHERE email = from_email), now());
 COMMIT;
 ROLLBACK;
 
@@ -476,16 +503,14 @@ FROM
     payment_membership;
 
 -- CREATING ADMIN MEMBER
+-- UPDATE
+--     member
+-- SET role
+--     = 'ADMIN'
+-- WHERE
+--     email = 'admin@admin.com';
 
-UPDATE
-    member
-SET role
-    = 'ADMIN'
-WHERE
-    email = 'admin@admin.com';
+-- -- ----
 
-CALL
-    give_admin_role ('admin@admin.com', 'admin@admin.com');
-
-
- 
+-- CALL
+--     give_admin_role ('admin@admin.com', 'admin@admin.com');

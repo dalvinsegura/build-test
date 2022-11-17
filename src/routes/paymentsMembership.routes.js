@@ -12,6 +12,7 @@ import validatorHandler from "../middlewares/validator.handler";
 import {
   getpaymentsMembershipForMembers,
   generatePremiumPayment,
+  generateLifetimePayment,
 } from "../schemas/paymentsmembership.schema";
 
 // ROUTES WITH A MIDDLERWARE DATA VALIDATOR AND AFTER THAT A ITS FUNCTION. THOSE ROUTES WITH A "authJwt.isAdmin" MIDDLERWARE ARE LIMITING ACCESS ONLY TO ADMIN MEMBERS
@@ -35,6 +36,16 @@ router.post(
     validatorHandler(generatePremiumPayment, "body"),
   ],
   paymentsMemebershipCtrl.generatePremiumPayment
+);
+
+router.post(
+  "/giveLifetime",
+  [
+    authJwt.verifyToken,
+    authJwt.isAdmin,
+    validatorHandler(generateLifetimePayment, "body"),
+  ],
+  paymentsMemebershipCtrl.generateLifetimePayment
 );
 
 export default router;

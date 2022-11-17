@@ -26,17 +26,21 @@ export const generatePremiumPayment = async (req, res, next) => {
   try {
     const { givePremiumTo, months } = req.body;
 
-    let membershipType = await pool.query(
-      `SELECT membership_type FROM v_member WHERE email = $1`,
+    let memberData = await pool.query(
+      `SELECT membership_type, verified FROM v_member WHERE email = $1`,
       [givePremiumTo]
     );
 
-    if (membershipType.rows.length !== 1)
+    if (memberData.rows.length !== 1)
       throw boom.notFound(
         `The user '${givePremiumTo}' you are trying to give premium doesn't exisit`
       );
 
-    membershipType = membershipType.rows[0].membership_type;
+    const membershipType = memberData.rows[0].membership_type;
+    const verified = memberData.rows[0].verified;
+
+    if (verified === false)
+      throw boom.badRequest("This memeber is unverified");
 
     function addMonths(numOfMonths, date = new Date()) {
       date.setMonth(date.getMonth() + numOfMonths);
@@ -51,6 +55,39 @@ export const generatePremiumPayment = async (req, res, next) => {
       givePremiumTo,
       months,
       addMonths(months),
+    ]);
+    res.status(200).json({ message: "Payment made successfull" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const generateLifetimePayment = async (req, res, next) => {
+  try {
+    const { giveLifetimeTo } = req.body;
+
+    let memberData = await pool.query(
+      `SELECT membership_type, verified FROM v_member WHERE email = $1`,
+      [giveLifetimeTo]
+    );
+    
+    if (memberData.rows.length !== 1)
+    throw boom.notFound(
+      `The user '${giveLifetimeTo}' you are trying to give lifetime membership doesn't exisit`
+      );
+      
+      const membershipType = memberData.rows[0].membership_type;
+      const verified = memberData.rows[0].verified;
+
+    if (verified === false)
+      throw boom.badRequest("This memeber is unverified");
+
+    if (membershipType == "LIFETIME")
+      throw boom.conflict("You already have a LIFETIME membership");
+
+    await pool.query(`call create_lifetime_payment($1, $2)`, [
+      req.memberEmail,
+      giveLifetimeTo
     ]);
     res.status(200).json({ message: "Payment made successfull" });
   } catch (error) {

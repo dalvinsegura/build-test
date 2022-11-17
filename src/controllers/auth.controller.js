@@ -90,7 +90,7 @@ export const signup = async (req, res, next) => {
       });
     };
 
-    mailingHandler(email, name);
+    // mailingHandler(email, name);
 
     // res.json({ token });
     res.status(200).send("You were signed up!");
@@ -128,6 +128,26 @@ export const signin = async (req, res, next) => {
 
     if (memberFound.rows[0].membership_status !== "ACTIVA")
       throw boom.unauthorized("Your membership is not active");
+
+    // Checking membership expiration date
+    const membership_type = memberFound.rows[0].membership_type;
+
+    const m_started = new Date(memberFound.rows[0].membership_started)
+      .toISOString()
+      .split("T")[0];
+    const m_finished = new Date(memberFound.rows[0].membership_finished)
+      .toISOString()
+      .split("T")[0];
+    const currentDate = new Date().toISOString().split("T")[0];
+
+    // CHECKING IF THE PREMIUM MEMBERS KEEP THEIR MEMBERSHIP ACTIVED
+    if (membership_type == "PREMIUM")
+      if (m_finished <= currentDate) {
+        // CHECK IF THE MEMBERSHIP EXPIRED, IT WILL BE UPDATED TO GRATIS
+        await pool.query(`CALL assign_free_membership($1, $1);`, [
+          req.body.email,
+        ]);
+      }
 
     const token = jwt.sign(
       { email: memberFound.rows[0].email },

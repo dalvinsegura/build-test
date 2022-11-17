@@ -1,6 +1,7 @@
 import express from "express";
 import morgan from "morgan";
 import pkg from "../package.json";
+import cors from "cors";
 
 import membersRoutes from "./routes/members.routes";
 import customersRoutes from "./routes/customers.routes";
@@ -16,9 +17,9 @@ import {logErrors, errorHandler, boomErrorHandler} from "./middlewares/error.han
 
 
 const app = express();
+app.use(cors())
 
 app.set("pkg", pkg);
-
 app.use(morgan("dev"));
 app.use(express.json());
 
