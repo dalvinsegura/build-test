@@ -46,7 +46,7 @@ export const verifyEmailByAdmin = async (req, res, next) => {
     
     if(memberFound.rows[0].role !== "MEMBER") {
 
-        if(emailToVerify == process.env.ADMINEMAIL) throw boom.unauthorized("You can't do this!");
+        if(emailToVerify !== process.env.ADMINEMAIL) throw boom.unauthorized("You can't do this!");
 
         await pool.query(`CALL verify_member($1, $2, $3)`, [req.memberEmail, emailToVerify, verificationStatus]);
         res.send("This account was verified successfully!");

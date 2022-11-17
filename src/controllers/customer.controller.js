@@ -4,8 +4,15 @@ import boom from "@hapi/boom";
 
 export const customerRegister = async (req, res, next) => {
   try {
-    const { name, lastname, address, sector, payday, paymentConcept } =
-      req.body;
+    const {
+      name,
+      lastname,
+      address,
+      sector,
+      house_number,
+      payday,
+      paymentConcept,
+    } = req.body;
 
     const memberFound = await pool.query(
       `SELECT membership_type FROM v_member m WHERE email = $1`,
@@ -26,8 +33,8 @@ export const customerRegister = async (req, res, next) => {
       );
 
     const duplicateCustomerFound = await pool.query(
-      `SELECT count(id) FROM v_customers WHERE email_member = $1 AND name = $2 AND lastname = $3 AND payday = $4`,
-      [req.memberEmail, name, lastname, payday]
+      `SELECT count(id) FROM v_customers WHERE email_member = $1 AND name = $2 AND lastname = $3 AND payday = $4 AND house_number = $5`,
+      [req.memberEmail, name, lastname, payday, house_number]
     );
 
     console.log(parseInt(duplicateCustomerFound.rows[0].count));
@@ -35,8 +42,17 @@ export const customerRegister = async (req, res, next) => {
       throw boom.conflict("You already registered this customer");
 
     await pool.query(
-      `CALL customer_register ($1, $1, $2, $3, $4, $5, $6, $7)`,
-      [req.memberEmail, name, lastname, address, sector, payday, paymentConcept]
+      `CALL customer_register ($1, $1, $2, $3, $4, $5, $6, $7, $8)`,
+      [
+        req.memberEmail,
+        name,
+        lastname,
+        address,
+        sector,
+        house_number,
+        payday,
+        paymentConcept,
+      ]
     );
 
     res.status(201).json({ message: "Customer registered successfully" });
@@ -63,7 +79,6 @@ export const getCustomer = async (req, res, next) => {
 
 export const getCustomerById = async (req, res, next) => {
   try {
-    
     const customerFounded = await pool.query(
       `SELECT * FROM v_customers WHERE email_member = $1 AND id = $2`,
       [req.memberEmail, req.params.customerId]
@@ -99,12 +114,13 @@ export const deleteCustomerById = async (req, res, next) => {
     if (customerFounded.rows.length == 0)
       throw boom.notFound("Customer not found");
 
-    await pool.query(
-      `CALL customer_remover($1, $1, $2)`, [req.memberEmail, req.params.customerId]
-    );
-    console.log("Test 1")
-    res.status(200).json({message: "Customer Deleteted Successfully"});
-    console.log("Test 2")
+    await pool.query(`CALL customer_remover($1, $1, $2)`, [
+      req.memberEmail,
+      req.params.customerId,
+    ]);
+    console.log("Test 1");
+    res.status(200).json({ message: "Customer Deleteted Successfully" });
+    console.log("Test 2");
   } catch (error) {
     next(error);
   }

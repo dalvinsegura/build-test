@@ -1,3 +1,9 @@
+-- DROP DATABASE
+--     IF EXISTS "instarecibo_db";
+
+-- CREATE DATABASE
+--     "instarecibo_db";
+
 set
     timezone to 'America/Santo_Domingo';
 
@@ -76,7 +82,8 @@ CREATE TABLE
         "lastname" varchar(40),
         "address" varchar(40),
         "sector" varchar(40),
-        "payday" date NOT NULL,
+        "house_number" varchar(7),
+        "payday" INT NOT NULL,
         "payment_concept" money,
         "date" TIMESTAMP,
         PRIMARY KEY ("id"),
@@ -89,7 +96,7 @@ CREATE TABLE
         "id" SERIAL,
         "email_member" varchar NOT NULL,
         "id_customer" INT NOT NULL,
-        "date" TIMESTAMP,
+        "created_at" TIMESTAMP,
         PRIMARY KEY ("id"),
         CONSTRAINT "FK_receipt.id_customer" FOREIGN KEY ("id_customer") REFERENCES "customer" ("id"),
         CONSTRAINT "FK_receipt.email_member" FOREIGN KEY ("email_member") REFERENCES "member" ("email")
@@ -152,6 +159,15 @@ INSERT INTO
     )
 VALUES
     ('GRATIS', 0);
+
+INSERT INTO
+    type_membership (
+        type
+,
+            price_month
+    )
+VALUES
+    ('FREE-TRIAL', 0);
 
 INSERT INTO
     type_membership (
@@ -308,6 +324,36 @@ ROLLBACK;
 END;
 $$;
 
+-- STORED PROCEDURE: GIVE A FREE-TRIAL MEMBERSHIP
+CREATE PROCEDURE
+    create_freetrial_payment (
+        from_email varchar,
+        to_email varchar,
+        months int,
+        finish_date date
+    ) LANGUAGE plpgsql AS $$
+BEGIN
+
+	INSERT INTO payment_membership (email_member, type, months, started, finished, price_month, date_payment)
+	VALUES (to_email, 'FREE-TRIAL', months, NOW(), finish_date, (SELECT price_month FROM type_membership WHERE type = 'FREE-TRIAL' ORDER BY price_month desc LIMIT 1), NOW());
+
+	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, 'PAYMENT INSERTION' , 'payment_membership', (SELECT role FROM member WHERE email = from_email), now());
+COMMIT;
+
+	UPDATE member SET role = 'MEMBER' WHERE email = to_email;
+	
+COMMIT;
+
+	UPDATE membership SET type = 'FREE-TRIAL', started = now(), finished = finish_date, status = (SELECT status FROM status_membership WHERE status = 'ACTIVA')
+	WHERE email_member = to_email;
+	
+	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, 'UPDATED TO FREE-TRIAL', 'membership', (SELECT role FROM member WHERE email = from_email), now());
+COMMIT;
+ROLLBACK;
+
+END;
+$$;
+
 -- STORED PROCEDURE: GIVE FREE MEMBERSHIP
 CREATE PROCEDURE
     assign_free_membership (from_email varchar, to_email varchar) LANGUAGE plpgsql AS $$
@@ -378,11 +424,12 @@ CREATE PROCEDURE
         lastname varchar,
         address varchar,
         sector varchar,
-        payday date,
+        house_num varchar,
+        payday INT,
         payment_concept bigint
     ) LANGUAGE plpgsql AS $$
 BEGIN
-	INSERT INTO customer (email_member, name, lastname, address, sector, payday, payment_concept, date) VALUES (to_email, name, lastname, address, sector, payday, payment_concept, now());
+	INSERT INTO customer (email_member, name, lastname, address, sector, house_number, payday, payment_concept, date) VALUES (to_email, name, lastname, address, sector, house_num, payday, payment_concept, now());
 	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, CONCAT('THE CUSTOMER ', name, ' ', lastname, ' WAS REGISTERED'), 'customer', (SELECT role FROM member WHERE email = from_email), now());
 COMMIT;
 ROLLBACK;
@@ -419,7 +466,7 @@ CREATE PROCEDURE
     ) LANGUAGE plpgsql AS $$
 
 BEGIN
-	INSERT INTO receipt (email_member, id_customer, date) VALUES (to_email, to_id_customer, now());
+	INSERT INTO receipt (email_member, id_customer, created_at) VALUES (to_email, to_id_customer, now());
 	
 	INSERT INTO database_activity (from_email, "to_member", activity, affected_table, role, date) 
 	VALUES (from_email, to_email, CONCAT('RECEIPT FOR ', (SELECT name FROM customer WHERE id = to_id_customer), ' ', (SELECT lastname FROM customer WHERE id = to_id_customer), ' WAS CREATED'), 'receipt', (SELECT role FROM member WHERE email = from_email), now());
@@ -474,9 +521,22 @@ FROM
 CREATE VIEW
     v_receipts AS
 SELECT
-    *
+    r.id,
+    r.email_member,
+    r.id_customer,
+    r.created_at,
+    c.payday
+
 FROM
-    receipt;
+    receipt r
+    INNER JOIN customer c ON r.id_customer = c.id
+GROUP BY 
+    r.id,
+    r.email_member,
+    r.id_customer,
+    r.created_at,
+    c.payday;
+
 
 -- CREATING A VIEW FOR LOGIN HISTORIAL
 CREATE VIEW
@@ -495,22 +555,20 @@ FROM
     database_activity;
 
 -- CREATING A VIEW FOR GETTING ALL COLUMN OF PAYMENT MEMBERSHIP TABLE
-CREATE VIEW
-    v_payment_historial AS
-SELECT
-    *
-FROM
-    payment_membership;
+-- CREATE VIEW
+--     v_payment_historial AS
+-- SELECT
+--     *
+-- FROM
+--     payment_membership;
 
--- CREATING ADMIN MEMBER
+-- -- CREATING ADMIN MEMBER
 -- UPDATE
 --     member
 -- SET role
 --     = 'ADMIN'
 -- WHERE
 --     email = 'admin@admin.com';
-
--- -- ----
-
+-- -- -- ----
 -- CALL
 --     give_admin_role ('admin@admin.com', 'admin@admin.com');

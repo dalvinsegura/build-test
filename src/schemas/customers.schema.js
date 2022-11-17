@@ -4,7 +4,8 @@ const name = Joi.string().min(3).max(15);
 const lastname = Joi.string().min(3).max(30);
 const address = Joi.string().min(5).max(50);
 const sector = Joi.string().min(5).max(50);
-const payday = Joi.date().greater("now");
+const house_number = Joi.string().alphanum().max(7);
+const payday = Joi.number().integer().greater(0).max(31);
 const paymentConcept = Joi.number().integer().greater(100);
 const memberEmail = Joi.string().email();
 
@@ -15,6 +16,7 @@ export const customerRegisterSchema = Joi.object({
   lastname: lastname.required().empty(),
   address: address.required().empty(),
   sector: sector.required().empty(),
+  house_number: house_number.required().empty().uppercase(),
   payday: payday.required().empty(),
   paymentConcept: paymentConcept.required().empty(),
   memberEmail: memberEmail,

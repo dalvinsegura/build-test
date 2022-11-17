@@ -94,3 +94,43 @@ export const generateLifetimePayment = async (req, res, next) => {
     next(error);
   }
 };
+
+export const generateFreetrialPayment = async (req, res, next) => {
+  try {
+    const { giveFreetrialTo, months } = req.body;
+
+    let memberData = await pool.query(
+      `SELECT membership_type, verified FROM v_member WHERE email = $1`,
+      [giveFreetrialTo]
+    );
+
+    if (memberData.rows.length !== 1)
+      throw boom.notFound(
+        `The user '${giveFreetrialTo}' you are trying to give premium doesn't exisit`
+      );
+
+    const membershipType = memberData.rows[0].membership_type;
+    const verified = memberData.rows[0].verified;
+
+    if (verified === false)
+      throw boom.badRequest("This memeber is unverified");
+
+    function addMonths(numOfMonths, date = new Date()) {
+      date.setMonth(date.getMonth() + numOfMonths);
+      return date;
+    }
+
+    if (membershipType == "FREE-TRIAL")
+      throw boom.conflict("You already have a FREE-TRIAL membership");
+
+    await pool.query(`call create_freetrial_payment($1, $2, $3, $4)`, [
+      req.memberEmail,
+      giveFreetrialTo,
+      months,
+      addMonths(months),
+    ]);
+    res.status(200).json({ message: "Payment made successfull" });
+  } catch (error) {
+    next(error);
+  }
+};
