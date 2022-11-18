@@ -7,6 +7,9 @@ export const customerRegister = async (req, res, next) => {
     const {
       name,
       lastname,
+      email_customer,
+      phone_number,
+      notificate_whatsapp,
       address,
       sector,
       house_number,
@@ -42,9 +45,12 @@ export const customerRegister = async (req, res, next) => {
       throw boom.conflict("You already registered this customer");
 
     await pool.query(
-      `CALL customer_register ($1, $1, $2, $3, $4, $5, $6, $7, $8)`,
+      `CALL customer_register ($1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
       [
         req.memberEmail,
+        email_customer,
+        phone_number,
+        notificate_whatsapp,
         name,
         lastname,
         address,

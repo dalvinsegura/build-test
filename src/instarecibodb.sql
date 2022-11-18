@@ -1,8 +1,8 @@
--- DROP DATABASE
---     IF EXISTS "instarecibo_db";
+DROP DATABASE
+    IF EXISTS "instarecibo_db";
 
--- CREATE DATABASE
---     "instarecibo_db";
+CREATE DATABASE
+    "instarecibo_db";
 
 set
     timezone to 'America/Santo_Domingo';
@@ -78,6 +78,9 @@ CREATE TABLE
     "customer" (
         "id" SERIAL,
         "email_member" varchar NOT NULL,
+        "email_customer" varchar NOT NULL,
+        "phonenumber_customer" BIGINT NOT NULL,
+        "notificate_whatsapp" BOOLEAN,
         "name" varchar(40) NOT NULL,
         "lastname" varchar(40),
         "address" varchar(40),
@@ -420,6 +423,9 @@ CREATE PROCEDURE
     customer_register (
         from_email varchar,
         to_email varchar,
+        email_customer_param varchar,
+        phonenumber_customer_param varchar,
+        notificate_whatsapp_param BOOLEAN,
         name varchar,
         lastname varchar,
         address varchar,
@@ -429,7 +435,7 @@ CREATE PROCEDURE
         payment_concept bigint
     ) LANGUAGE plpgsql AS $$
 BEGIN
-	INSERT INTO customer (email_member, name, lastname, address, sector, house_number, payday, payment_concept, date) VALUES (to_email, name, lastname, address, sector, house_num, payday, payment_concept, now());
+	INSERT INTO customer (email_member, email_customer, phonenumber_customer, phonenumber_customer, notificate_whatsapp, name, lastname, address, sector, house_number, payday, payment_concept, date) VALUES (to_email, email_customer_param, phonenumber_customer_param, notificate_whatsapp_param, notificate_whatsapp_param, name, lastname, address, sector, house_num, payday, payment_concept, now());
 	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, CONCAT('THE CUSTOMER ', name, ' ', lastname, ' WAS REGISTERED'), 'customer', (SELECT role FROM member WHERE email = from_email), now());
 COMMIT;
 ROLLBACK;
@@ -526,17 +532,15 @@ SELECT
     r.id_customer,
     r.created_at,
     c.payday
-
 FROM
     receipt r
     INNER JOIN customer c ON r.id_customer = c.id
-GROUP BY 
+GROUP BY
     r.id,
     r.email_member,
     r.id_customer,
     r.created_at,
     c.payday;
-
 
 -- CREATING A VIEW FOR LOGIN HISTORIAL
 CREATE VIEW
@@ -554,21 +558,20 @@ SELECT
 FROM
     database_activity;
 
--- CREATING A VIEW FOR GETTING ALL COLUMN OF PAYMENT MEMBERSHIP TABLE
+-- CREATING A VIEW  FOR GETTING ALL COLUMN OF PAYMENT MEMBERSHIP TABLE
 -- CREATE VIEW
 --     v_payment_historial AS
 -- SELECT
 --     *
 -- FROM
 --     payment_membership;
-
 -- -- CREATING ADMIN MEMBER
--- UPDATE
---     member
--- SET role
---     = 'ADMIN'
--- WHERE
---     email = 'admin@admin.com';
--- -- -- ----
--- CALL
---     give_admin_role ('admin@admin.com', 'admin@admin.com');
+UPDATE
+    member
+SET role
+    = 'ADMIN', verified = true
+WHERE
+    email = 'admin@admin.com';
+-- -- ----
+CALL
+    give_admin_role ('admin@admin.com', 'admin@admin.com');

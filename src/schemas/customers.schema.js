@@ -2,6 +2,9 @@ import Joi from "joi";
 
 const name = Joi.string().min(3).max(15);
 const lastname = Joi.string().min(3).max(30);
+const email_customer = Joi.string().email();
+const phone_number = Joi.number().integer().greater(829);
+const notificate_whatsapp = Joi.boolean();
 const address = Joi.string().min(5).max(50);
 const sector = Joi.string().min(5).max(50);
 const house_number = Joi.string().alphanum().max(7);
@@ -14,6 +17,9 @@ const customerId = Joi.number().integer().greater(0);
 export const customerRegisterSchema = Joi.object({
   name: name.required().empty(),
   lastname: lastname.required().empty(),
+  email_customer: email_customer.required().empty(),
+  phone_number: phone_number.required().empty(),
+  notificate_whatsapp: notificate_whatsapp.required().empty(),
   address: address.required().empty(),
   sector: sector.required().empty(),
   house_number: house_number.required().empty().uppercase(),
