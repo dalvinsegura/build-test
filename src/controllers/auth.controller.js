@@ -1,7 +1,6 @@
 import { pool } from "../database";
 import bycrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import validator from "validator";
 import IP from "ip";
 import boom from "@hapi/boom";
 import nodemailer from "nodemailer";

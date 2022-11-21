@@ -37,16 +37,18 @@ router.get(
 
 // GETTING A CUSTOMER BY THEIR ID ASSIGNED ON THE DB.
 router.get(
-  "/:customerId",
+  "/id/:customerId",
   [authJwt.verifyToken, validatorHandler(getCustomerByIdSchema, "params")],
   customerCtrl.getCustomerById
 );
 
 // REMOVING A CUSTOMER BY THEIR ID ASSIGNED ON THE DB.
 router.delete(
-  "/:customerId",
+  "/id/:customerId",
   [authJwt.verifyToken, validatorHandler(deleteCustomerByIdSchema, "params")],
   customerCtrl.deleteCustomerById
 );
+
+router.get("/pdf", customerCtrl.pdfRender)
 
 export default router;

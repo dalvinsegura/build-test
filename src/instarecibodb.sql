@@ -1,8 +1,8 @@
-DROP DATABASE
-    IF EXISTS "instarecibo_db";
+-- DROP DATABASE
+--     IF EXISTS "instarecibo_db";
 
-CREATE DATABASE
-    "instarecibo_db";
+-- CREATE DATABASE
+--     "instarecibo_db";
 
 set
     timezone to 'America/Santo_Domingo';
@@ -79,7 +79,7 @@ CREATE TABLE
         "id" SERIAL,
         "email_member" varchar NOT NULL,
         "email_customer" varchar NOT NULL,
-        "phonenumber_customer" BIGINT NOT NULL,
+        "phone_number" BIGINT NOT NULL,
         "notificate_whatsapp" BOOLEAN,
         "name" varchar(40) NOT NULL,
         "lastname" varchar(40),
@@ -424,7 +424,7 @@ CREATE PROCEDURE
         from_email varchar,
         to_email varchar,
         email_customer_param varchar,
-        phonenumber_customer_param varchar,
+        phonenumber_customer_param BIGINT,
         notificate_whatsapp_param BOOLEAN,
         name varchar,
         lastname varchar,
@@ -435,7 +435,7 @@ CREATE PROCEDURE
         payment_concept bigint
     ) LANGUAGE plpgsql AS $$
 BEGIN
-	INSERT INTO customer (email_member, email_customer, phonenumber_customer, phonenumber_customer, notificate_whatsapp, name, lastname, address, sector, house_number, payday, payment_concept, date) VALUES (to_email, email_customer_param, phonenumber_customer_param, notificate_whatsapp_param, notificate_whatsapp_param, name, lastname, address, sector, house_num, payday, payment_concept, now());
+	INSERT INTO customer (email_member, email_customer, phone_number, notificate_whatsapp, name, lastname, address, sector, house_number, payday, payment_concept, date) VALUES (to_email, email_customer_param, phonenumber_customer_param, notificate_whatsapp_param, name, lastname, address, sector, house_num, payday, payment_concept, now());
 	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, CONCAT('THE CUSTOMER ', name, ' ', lastname, ' WAS REGISTERED'), 'customer', (SELECT role FROM member WHERE email = from_email), now());
 COMMIT;
 ROLLBACK;
@@ -573,5 +573,3 @@ SET role
 WHERE
     email = 'admin@admin.com';
 -- -- ----
-CALL
-    give_admin_role ('admin@admin.com', 'admin@admin.com');

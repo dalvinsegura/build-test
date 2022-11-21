@@ -1,6 +1,8 @@
 import { json, request } from "express";
 import { pool } from "../database";
 import boom from "@hapi/boom";
+import phantom from "phantom";
+import {htmlPdfConverter} from "../libs/htmlPdfConverter";
 
 export const customerRegister = async (req, res, next) => {
   try {
@@ -130,4 +132,8 @@ export const deleteCustomerById = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
+
+export const pdfRender = (req, res) => {
+  htmlPdfConverter();
 };
