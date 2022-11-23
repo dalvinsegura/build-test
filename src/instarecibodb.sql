@@ -572,4 +572,6 @@ SET role
     = 'ADMIN', verified = true
 WHERE
     email = 'admin@admin.com';
--- -- ----
+
+CALL give_admin_role('admin@admin.com', 'admin@admin.com')
+-- -- -- ----

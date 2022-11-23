@@ -49,6 +49,4 @@ router.delete(
   customerCtrl.deleteCustomerById
 );
 
-router.get("/pdf", customerCtrl.pdfRender)
-
 export default router;

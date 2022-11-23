@@ -160,7 +160,7 @@ export const signin = async (req, res, next) => {
       `INSERT INTO login_historial (email_member, ip_address,log_date) VALUES ($1, $2, (SELECT CURRENT_TIMESTAMP))`,
       [memberFound.rows[0].email, ipAddress]
     );
-    res.status(200).json({ token: token });
+    res.status(200).json({ token: token, role: memberFound.rows[0].role });
   } catch (error) {
     next(error);
   }
