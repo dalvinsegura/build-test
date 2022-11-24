@@ -7,7 +7,7 @@ export const logErrors = (err, req, res, next) => {
 export const errorHandler = (err, req, res, next) => {
     console.log('logHandler');
 
-  res.status(500).json({ message: err.message, stack: err.stack });
+  // res.status(500).json({ message: err.message, stack: err.stack });
 };
 
 export const boomErrorHandler = (err, req, res, next) => {
@@ -21,3 +21,4 @@ export const boomErrorHandler = (err, req, res, next) => {
 };
 
 
+  
