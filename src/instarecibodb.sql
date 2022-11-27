@@ -575,3 +575,6 @@ WHERE
 
 CALL give_admin_role('admin@admin.com', 'admin@admin.com')
 -- -- -- ----
+
+
+SELECT * from member

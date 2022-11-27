@@ -17,7 +17,7 @@ import {logErrors, errorHandler, boomErrorHandler} from "./middlewares/error.han
 
 
 const app = express();
-app.use(cors())
+app.use(cors({credentials: true, origin: 'http://127.0.0.1:5173'}))
 
 app.set("pkg", pkg);
 app.use(morgan("dev"));
