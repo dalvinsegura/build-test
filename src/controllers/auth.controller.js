@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import IP from "ip";
 import boom from "@hapi/boom";
 import nodemailer from "nodemailer";
+import cookie from 'cookie-parser';
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -148,11 +149,19 @@ export const signin = async (req, res, next) => {
         ]);
       }
 
-    const token = jwt.sign(
+    const accesstoken = jwt.sign(
       { email: memberFound.rows[0].email },
       process.env.SECRET,
       {
-        expiresIn: 86400,
+        expiresIn: '30s',
+      }
+    );
+
+    const refreshToken = jwt.sign(
+      { email: memberFound.rows[0].email },
+      process.env.SECRET,
+      {
+        expiresIn: '1d',
       }
     );
 
@@ -160,7 +169,8 @@ export const signin = async (req, res, next) => {
       `INSERT INTO login_historial (email_member, ip_address,log_date) VALUES ($1, $2, (SELECT CURRENT_TIMESTAMP))`,
       [memberFound.rows[0].email, ipAddress]
     );
-    res.status(200).json({ token: token, role: memberFound.rows[0].role });
+    res.cookie('jwt', refreshToken, {httpOnly: true, maxAge: 24 * 60 * 60 * 1000});
+    res.status(200).json({ token: accesstoken, role: memberFound.rows[0].role });
   } catch (error) {
     next(error);
   }

@@ -7,7 +7,9 @@ dotenv.config();
 
 export const verifyToken = async (req, res, next) => {
   try {
-    const token = req.headers["x-access-token"];
+    const token = req.headers["Authorization"];
+
+    console.log(token)
 
     if (!token) throw boom.conflict("Not token provided");
 
