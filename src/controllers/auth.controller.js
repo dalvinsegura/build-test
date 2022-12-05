@@ -159,11 +159,14 @@ export const signin = async (req, res, next) => {
 
     const refreshToken = jwt.sign(
       { email: memberFound.rows[0].email },
-      process.env.SECRET,
+      process.env.REFESH_TOKEN_SECRET,
       {
         expiresIn: '1d',
       }
     );
+
+    // Saving refreshToken with current member
+    await pool.query(`CALL update_refreshtoken($1, $2)`,[memberFound.rows[0].email, refreshToken])
 
     await pool.query(
       `INSERT INTO login_historial (email_member, ip_address,log_date) VALUES ($1, $2, (SELECT CURRENT_TIMESTAMP))`,

@@ -1,32 +1,40 @@
 import { pool } from "../database";
-import bycrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import IP from "ip";
 import boom from "@hapi/boom";
-import nodemailer from "nodemailer";
 
 import * as dotenv from "dotenv";
 dotenv.config();
 
 export const handleRefreshToken = async (req, res, next) => {
-    try {
-      const cookies = req.cookies;
-  
-      if(!cookies?.jwt) throw boom.unauthorized();
-      console.log(cookies.jwt);
+  try {
+    const cookies = req.cookies;
 
-      const refreshToken = cookies.jwt;
+    if (!cookies?.jwt) throw boom.unauthorized();
 
-      const token = jwt.sign(
-        { email: memberFound.rows[0].email },
-        process.env.SECRET,
-        {
-          expiresIn: 86400,
-        }
-      );
-  
+    const refreshToken = cookies.jwt;
 
-    } catch (error) {
-      next(error);
-    }
-  };
+    const foundMember = await pool.query(
+      `SELECT email FROM v_member WHERE refresh_token = $1`,
+      [refreshToken]
+    );
+    console.log(foundMember.rows[0].email);
+    if (!foundMember) throw boom.forbidden();
+
+    jwt.verify(
+      refreshToken,
+      process.env.REFESH_TOKEN_SECRET,
+      (err, decoded) => {
+        if (err || foundMember.rows[0].email !== decoded.email)
+          throw boom.forbidden();
+        const accessToken = jwt.sign(
+          { email: decoded.email },
+          process.env.SECRET,
+          { expiresIn: "30s" }
+        );
+        res.json({ accessToken });
+      }
+    );
+  } catch (error) {
+    next(error);
+  }
+};

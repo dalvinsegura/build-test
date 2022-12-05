@@ -7,11 +7,11 @@ dotenv.config();
 
 export const verifyToken = async (req, res, next) => {
   try {
-    const token = req.headers["Authorization"];
+    const authHeader = req.headers["authorization"];
 
-    console.log(token)
+    if (!authHeader) throw boom.conflict("Not token provided");
 
-    if (!token) throw boom.conflict("Not token provided");
+    const token = authHeader.split(' ')[1];
 
     const decoded = jwt.verify(token, process.env.SECRET);
 

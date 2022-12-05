@@ -19,6 +19,7 @@ CREATE TABLE
 CREATE TABLE
     "member" (
         "id" SERIAL,
+        "refresh_token" varchar,
         "email" varchar NOT NULL,
         "password" varchar(255) NOT NULL,
         "name" varchar NOT NULL,
@@ -272,6 +273,30 @@ END;
 
 $$;
 
+
+CREATE PROCEDURE update_refreshtoken (
+    to_email varchar,
+    new_refreshToken varchar
+) LANGUAGE plpgsql AS $$
+
+BEGIN
+    UPDATE member SET "refresh_token" = new_refreshToken WHERE email = to_email;
+COMMIT;
+END;
+
+$$;
+
+CREATE PROCEDURE delete_refreshtoken (
+    to_email varchar
+    ) LANGUAGE plpgsql AS $$
+
+BEGIN
+    UPDATE member SET "refresh_token" = null WHERE email = to_email;
+COMMIT;
+END;
+
+$$;
+
 -- STORED PROCEDURE: GENERATE A PREMIUM PAYMENT AND GIVE PREMIUM
 CREATE PROCEDURE
     create_premium_payment (
@@ -489,6 +514,7 @@ $$;
 CREATE VIEW
     v_member AS
 SELECT
+    m.refresh_token,
     m.email,
     m.password,
     m.name,
@@ -504,6 +530,7 @@ FROM
     member m
     INNER JOIN membership ms ON m.email = ms.email_member
 GROUP BY
+    m.refresh_token,
     m.email,
     m.password,
     m.name,
@@ -559,22 +586,23 @@ FROM
     database_activity;
 
 -- CREATING A VIEW  FOR GETTING ALL COLUMN OF PAYMENT MEMBERSHIP TABLE
--- CREATE VIEW
---     v_payment_historial AS
--- SELECT
---     *
--- FROM
---     payment_membership;
+CREATE VIEW
+    v_payment_historial AS
+SELECT
+    *
+FROM
+    payment_membership;
+
 -- -- CREATING ADMIN MEMBER
-UPDATE
-    member
-SET role
-    = 'ADMIN', verified = true
-WHERE
-    email = 'admin@admin.com';
+-- UPDATE
+--     member
+-- SET role
+--     = 'ADMIN', verified = true
+-- WHERE
+--     email = 'admin@admin.com';
 
-CALL give_admin_role('admin@admin.com', 'admin@admin.com')
--- -- -- ----
+-- CALL give_admin_role('admin@admin.com', 'admin@admin.com')
+-- -- -- -- -- ----
 
 
-SELECT * from member
+-- SELECT * from member
