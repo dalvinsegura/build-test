@@ -8,24 +8,24 @@ dotenv.config();
 export const handleRefreshToken = async (req, res, next) => {
   try {
     const cookies = req.cookies;
-
     if (!cookies?.jwt) throw boom.unauthorized();
-
+    
     const refreshToken = cookies.jwt;
-
+    
+    
     const foundMember = await pool.query(
       `SELECT email FROM v_member WHERE refresh_token = $1`,
       [refreshToken]
-    );
-    console.log(foundMember.rows[0].email);
-    if (!foundMember) throw boom.forbidden();
-
-    jwt.verify(
-      refreshToken,
-      process.env.REFESH_TOKEN_SECRET,
-      (err, decoded) => {
-        if (err || foundMember.rows[0].email !== decoded.email)
+      );
+      if (!foundMember) throw boom.forbidden();
+      
+      jwt.verify(
+        refreshToken,
+        process.env.REFESH_TOKEN_SECRET,
+        (err, decoded) => {
+          if (err || foundMember.rows[0].email !== decoded.email)
           throw boom.forbidden();
+          
         const accessToken = jwt.sign(
           { email: decoded.email },
           process.env.SECRET,

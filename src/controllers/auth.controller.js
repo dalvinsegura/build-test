@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import IP from "ip";
 import boom from "@hapi/boom";
 import nodemailer from "nodemailer";
-import cookie from 'cookie-parser';
+import cookie from "cookie-parser";
 
 import * as dotenv from "dotenv";
 dotenv.config();
@@ -153,7 +153,7 @@ export const signin = async (req, res, next) => {
       { email: memberFound.rows[0].email },
       process.env.SECRET,
       {
-        expiresIn: '30s',
+        expiresIn: "30s",
       }
     );
 
@@ -161,19 +161,29 @@ export const signin = async (req, res, next) => {
       { email: memberFound.rows[0].email },
       process.env.REFESH_TOKEN_SECRET,
       {
-        expiresIn: '1d',
+        expiresIn: "14s",
       }
     );
 
     // Saving refreshToken with current member
-    await pool.query(`CALL update_refreshtoken($1, $2)`,[memberFound.rows[0].email, refreshToken])
+    await pool.query(`CALL update_refreshtoken($1, $2)`, [
+      memberFound.rows[0].email,
+      refreshToken,
+    ]);
 
     await pool.query(
       `INSERT INTO login_historial (email_member, ip_address,log_date) VALUES ($1, $2, (SELECT CURRENT_TIMESTAMP))`,
       [memberFound.rows[0].email, ipAddress]
     );
-    res.cookie('jwt', refreshToken, {httpOnly: true, maxAge: 24 * 60 * 60 * 1000});
-    res.status(200).json({ token: accesstoken, role: memberFound.rows[0].role });
+    res.cookie("jwt", refreshToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "None",
+      maxAge: 24 * 60 * 60 * 1000,
+    });
+    res
+      .status(200)
+      .json({ token: accesstoken, role: memberFound.rows[0].role });
   } catch (error) {
     next(error);
   }

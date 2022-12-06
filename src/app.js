@@ -3,6 +3,9 @@ import morgan from "morgan";
 import pkg from "../package.json";
 import cors from "cors";
 
+import credentials from "./config/credentials";
+import corsOptions from "./config/corsOptions";
+
 import membersRoutes from "./routes/members.routes";
 import customersRoutes from "./routes/customers.routes";
 import receiptRoutes from "./routes/receipt.routes";
@@ -20,7 +23,9 @@ import cookieParser from "cookie-parser";
 
 
 const app = express();
-app.use(cors({credentials: true, origin: 'http://127.0.0.1:5173'}))
+app.use(credentials);
+app.use(cors(corsOptions));
+
 
 app.set("pkg", pkg);
 app.use(morgan("dev"));
