@@ -153,7 +153,7 @@ export const signin = async (req, res, next) => {
       { email: memberFound.rows[0].email },
       process.env.SECRET,
       {
-        expiresIn: "30s",
+        expiresIn: "10s",
       }
     );
 

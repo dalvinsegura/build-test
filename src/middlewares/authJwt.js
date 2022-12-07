@@ -11,23 +11,35 @@ export const verifyToken = async (req, res, next) => {
 
     if (!authHeader) throw boom.conflict("Not token provided");
 
-    const token = authHeader.split(' ')[1];
+    const token = authHeader.split(" ")[1];
 
-    const decoded = jwt.verify(token, process.env.SECRET);
+    const decoded = jwt.verify(
+      token,
+      process.env.SECRET,
+      async (err, decoded) => {
+        try {
+          if (err) throw boom.forbidden(); //invalid token
 
-    req.memberEmail = decoded.email;
+        console.log("ola dalvin");
 
-    const memberFound = await pool.query(
-      `SELECT email, role, membership_type FROM v_member WHERE email = $1;`,
-      [req.memberEmail]
+        req.memberEmail = decoded.email;
+
+        const memberFound = await pool.query(
+          `SELECT email, role, membership_type FROM v_member WHERE email = $1;`,
+          [req.memberEmail]
+        );
+
+        if (memberFound.rows.length == 0) throw boom.unauthorized();
+
+        req.memberRole = memberFound.rows[0].role;
+        req.memberMembershipType = memberFound.rows[0].membership_type;
+
+        next();
+        } catch (error) {
+          next(error)
+        }
+      }
     );
-
-    if (memberFound.rows.length == 0) throw boom.notFound("Member not found");
-
-    req.memberRole = memberFound.rows[0].role;
-    req.memberMembershipType = memberFound.rows[0].membership_type;
-
-    next();
   } catch (error) {
     next(error);
   }

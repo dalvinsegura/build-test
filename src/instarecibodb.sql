@@ -594,14 +594,14 @@ FROM
     payment_membership;
 
 -- -- CREATING ADMIN MEMBER
--- UPDATE
---     member
--- SET role
---     = 'ADMIN', verified = true
--- WHERE
---     email = 'admin@admin.com';
+UPDATE
+    member
+SET role
+    = 'ADMIN', verified = true
+WHERE
+    email = 'admin@admin.com';
 
--- CALL give_admin_role('admin@admin.com', 'admin@admin.com')
+CALL give_admin_role('admin@admin.com', 'admin@admin.com')
 -- -- -- -- -- ----
 
 
