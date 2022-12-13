@@ -14,9 +14,12 @@ export const handleRefreshToken = async (req, res, next) => {
     
     
     const foundMember = await pool.query(
-      `SELECT email FROM v_member WHERE refresh_token = $1`,
+      `SELECT email, role FROM v_member WHERE refresh_token = $1`,
       [refreshToken]
       );
+
+      const role = foundMember.rows[0].role;
+
       if (!foundMember) throw boom.forbidden();
       
       jwt.verify(
@@ -31,7 +34,7 @@ export const handleRefreshToken = async (req, res, next) => {
           process.env.SECRET,
           { expiresIn: "10s" }
         );
-        res.json({ accessToken });
+        res.json({ role, accessToken });
       }
     );
   } catch (error) {
