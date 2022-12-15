@@ -8,6 +8,7 @@ dotenv.config();
 export const verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers["authorization"];
+    console.log(authHeader)
 
     if (!authHeader) throw boom.conflict("Not token provided");
 
@@ -18,9 +19,7 @@ export const verifyToken = async (req, res, next) => {
       process.env.SECRET,
       async (err, decoded) => {
         try {
-          if (err) throw boom.forbidden(); //invalid token
-
-        console.log("ola dalvin");
+          if (err) throw boom.forbidden("Token expired/invalid"); //invalid token
 
         req.memberEmail = decoded.email;
 
