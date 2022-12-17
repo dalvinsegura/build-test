@@ -41,8 +41,8 @@ export const signup = async (req, res, next) => {
       lastname,
     ]);
 
-    const emailToken = jwt.sign({ email: email }, process.env.SECRET, {
-      expiresIn: 86400, // 24 hours
+    const emailToken = jwt.sign({ email: email }, process.env.SECRET_EMAIL_VERIFICATION, {
+      expiresIn: '15m', // 15 minutes
     });
 
     // MAILING
@@ -67,8 +67,10 @@ export const signup = async (req, res, next) => {
           
           Nos gustaría confirmar que su cuenta se creó correctamente. Para acceder al [portal del cliente], haga clic en el siguiente enlace.\n\n
           
-          http://localhost:3000/account/email_verification/${emailToken}\n\n
+          http://127.0.0.1:5173/verify/success/${emailToken}\n\n
+
           
+
           Si tiene algún problema para iniciar sesión en su cuenta, comuníquese con nosotros a sorporte.instarecibo@outlook.com\n\n
           
           Saludos,\n
@@ -154,7 +156,7 @@ export const signin = async (req, res, next) => {
       { email: memberFound.rows[0].email },
       process.env.SECRET,
       {
-        expiresIn: "10s",
+        expiresIn: "10m",
       }
     );
 

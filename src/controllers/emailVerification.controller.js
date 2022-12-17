@@ -6,9 +6,17 @@ dotenv.config();
 
 export const verifyEmailByEmail = async (req, res, next) => {
   try {
-    const emailToken = req.body.token || req.params.emailToken || req.headers[ "x-access-token" ]; 
+    const emailToken = req.body.token || req.params.emailToken; 
 
-    const decoded = jwt.verify(emailToken, process.env.SECRET);
+
+    console.log("olaaa")
+
+
+    const decoded = jwt.verify(emailToken, process.env.SECRET, (err, decoded) => {
+      if(err) throw boom.forbidden("No valid token")
+
+      return;
+    });
 
     const emailDecoded = decoded.email;
 

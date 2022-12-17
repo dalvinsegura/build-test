@@ -10,18 +10,18 @@ import { authJwt } from "../middlewares/";
 // IMPORTING VALIDATOR HANDLER AND THEIR SCHEME FOR VALIDATION.
 import validatorHandler from "../middlewares/validator.handler";
 import {
-    // emailVerification,
+    emailVerification,
     verifyMemberWithAdmin,
 } from "../schemas/emailVerification.schema";
 
 // ROUTES WITH A MIDDLERWARE DATA VALIDATOR AND AFTER THAT A ITS FUNCTION. THOSE ROUTES WITH A "authJwt.isAdmin" MIDDLERWARE ARE LIMITING ACCESS ONLY TO ADMIN MEMBERS.
 
-// // GETTING A LOGIN HISTORY (FOR SECURITY)
-// router.post(
-//   "/:emailToken",
-//   validatorHandler(emailVerification, "params"),
-//   verifyEmailCtrl.verifyEmailByEmail
-// );
+// GETTING A LOGIN HISTORY (FOR SECURITY)
+router.post(
+  "/:emailToken",
+  validatorHandler(emailVerification, "params"),
+  verifyEmailCtrl.verifyEmailByEmail
+);
 
 router.post(
   "/manual",

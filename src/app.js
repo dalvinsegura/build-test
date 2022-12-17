@@ -50,7 +50,7 @@ app.use("/api/membership", membershipRoutes);
 app.use("/api/logout", logoutRoutes);
 app.use("/api/refresh", refreshRoutes);
 app.use("/api/auth", authRoutes);
-app.use("/account/verification", emailVerificationRoutes);
+app.use("api/account/verification", emailVerificationRoutes);
 
 app.use(logErrors);
 app.use(boomErrorHandler);
