@@ -31,6 +31,8 @@ export const deleteMemberById = async (req, res, next) => {
       [memberDelete]
     );
 
+    if(roleFound.rows == 0) throw boom.forbidden("This member doesn't exists");
+
     if (roleFound.rows[0].role == "ADMIN")
       throw boom.unauthorized("You can't remove an Administrator");
 
@@ -38,7 +40,7 @@ export const deleteMemberById = async (req, res, next) => {
       req.memberEmail,
       memberDelete,
     ]);
-    res.status(204).json("Member was deleted successfully");
+    res.status(200).json("Member was deleted successfully");
   } catch (error) {
     next(error);
   }

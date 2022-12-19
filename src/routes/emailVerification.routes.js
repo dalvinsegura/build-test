@@ -18,8 +18,8 @@ import {
 
 // GETTING A LOGIN HISTORY (FOR SECURITY)
 router.post(
-  "/:emailToken",
-  validatorHandler(emailVerification, "params"),
+  "/otp-code",
+  validatorHandler(emailVerification, "body"),
   verifyEmailCtrl.verifyEmailByEmail
 );
 

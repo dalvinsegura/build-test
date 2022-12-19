@@ -4,7 +4,7 @@ import jwt from "jsonwebtoken";
 import IP from "ip";
 import boom from "@hapi/boom";
 import nodemailer from "nodemailer";
-import cookie from "cookie-parser";
+import CryptoJS from "crypto-js";
 
 import * as dotenv from "dotenv";
 import cookieParser from "cookie-parser";
@@ -41,9 +41,14 @@ export const signup = async (req, res, next) => {
       lastname,
     ]);
 
-    const emailToken = jwt.sign({ email: email }, process.env.SECRET_EMAIL_VERIFICATION, {
-      expiresIn: '15m', // 15 minutes
-    });
+    await pool.query(`CALL new_otpcode($1, $1, $2)`, [email, "account verification"]);
+
+    let OTPCode = await pool.query(`SELECT code FROM otp_code WHERE email_member = $1 AND reason = $2`, [email, 'account verification'])
+
+    console.log(OTPCode.rows[0].code);
+
+    OTPCode = OTPCode.rows[0].code
+
 
     // MAILING
     const mailingHandler = (mailConfirmationTo, name) => {
@@ -57,6 +62,7 @@ export const signup = async (req, res, next) => {
         },
       });
 
+
       const mailOption = {
         from: "Instarecibo Team <servicio.instarecibo@outlook.com>",
         to: mailConfirmationTo,
@@ -65,9 +71,7 @@ export const signup = async (req, res, next) => {
           Hola ${name},\n
           Gracias por unirse a Instarecibo.\n\n
           
-          Nos gustaría confirmar que su cuenta se creó correctamente. Para acceder al [portal del cliente], haga clic en el siguiente enlace.\n\n
-          
-          http://127.0.0.1:5173/verify/success/${emailToken}\n\n
+          Codigo de verificacion: ${OTPCode}
 
           
 
@@ -93,7 +97,7 @@ export const signup = async (req, res, next) => {
       });
     };
 
-    // mailingHandler(email, name);
+    mailingHandler(email, name);
 
     // res.json({ token });
     res.status(200).send("You were signed up!");
@@ -156,7 +160,7 @@ export const signin = async (req, res, next) => {
       { email: memberFound.rows[0].email },
       process.env.SECRET,
       {
-        expiresIn: "10m",
+        expiresIn: "10d",
       }
     );
 

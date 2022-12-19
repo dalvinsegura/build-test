@@ -1,9 +1,7 @@
 -- DROP DATABASE
 --     IF EXISTS "instarecibo_db";
-
 -- CREATE DATABASE
 --     "instarecibo_db";
-
 set
     timezone to 'America/Santo_Domingo';
 
@@ -29,6 +27,16 @@ CREATE TABLE
         "date" TIMESTAMP,
         PRIMARY KEY ("email"),
         CONSTRAINT "FK_member.role" FOREIGN KEY ("role") REFERENCES "role" ("role")
+    );
+
+CREATE TABLE
+    "otp_code" (
+        "email_member" varchar NOT NULL,
+        "code" int NOT NULL,
+        "reason" varchar NOT NULL,
+        "used" boolean NOT NULL,
+        "date" TIMESTAMP,
+        CONSTRAINT "FK_membership.email_member" FOREIGN KEY ("email_member") REFERENCES "member" ("email")
     );
 
 -- CREATING TABLE FOR DIFFERENT TYPE OF MEMBERSHIP
@@ -157,36 +165,32 @@ VALUES
 -- CREATING STATUS MEMBERSHIP
 INSERT INTO
     type_membership (
-        type
-,
-            price_month
+        type,
+        price_month
     )
 VALUES
     ('GRATIS', 0);
 
 INSERT INTO
     type_membership (
-        type
-,
-            price_month
+        type,
+        price_month
     )
 VALUES
     ('FREE-TRIAL', 0);
 
 INSERT INTO
     type_membership (
-        type
-,
-            price_month
+        type,
+        price_month
     )
 VALUES
     ('PREMIUM', 750);
 
 INSERT INTO
     type_membership (
-        type
-,
-            price_month
+        type,
+        price_month
     )
 VALUES
     ('LIFETIME', 10500);
@@ -205,13 +209,12 @@ VALUES
 -- --------------------------------------------------------------
 -- STORED PRECEDURES:
 -- STORED PROCEDURE: SIGN UP MEMBER
-CREATE PROCEDURE
-    signup_member (
-        email_recived varchar,
-        password varchar,
-        name varchar,
-        lastname varchar
-    ) LANGUAGE plpgsql AS $$
+CREATE PROCEDURE signup_member (
+    email_recived varchar,
+    password varchar,
+    name varchar,
+    lastname varchar
+) LANGUAGE plpgsql AS $$
 BEGIN
 	INSERT INTO member (email, password, name, lastname, role, date) VALUES (email_recived, password, name, lastname, 'MEMBER', now());
 COMMIT;
@@ -222,8 +225,7 @@ END;
 $$;
 
 -- STORED PROCEDURE: REMOVE A MEMBER AND THEIR STUFF
-CREATE PROCEDURE
-    member_remover (from_email varchar, to_email varchar) LANGUAGE plpgsql AS $$
+CREATE PROCEDURE member_remover (from_email varchar, to_email varchar) LANGUAGE plpgsql AS $$
 
 BEGIN
 
@@ -247,6 +249,10 @@ COMMIT;
 	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, 'CUSTOMER WAS CLEARED, BECAUSE THE MEMBER WAS REMOVED' , 'customer', (SELECT role FROM member WHERE email = from_email), now());
 COMMIT;
 
+	DELETE FROM otp_code WHERE email_member = to_email;
+	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, 'OTP CODES WAS CLEARED, BECAUSE THE MEMBER WAS REMOVED' , 'otp_code', (SELECT role FROM member WHERE email = from_email), now());
+COMMIT;
+
 	DELETE FROM "member" WHERE email = to_email;
 	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, 'THE MEMBER WAS REMOVED' , 'member', (SELECT role FROM member WHERE email = from_email), now());
 
@@ -255,29 +261,49 @@ COMMIT;
 END;
 $$;
 
+-- FUNCTION for generate a random code for "new_otpcode" procedure
+CREATE
+OR REPLACE FUNCTION random_between (low INT, high INT) RETURNS INT AS $$
+BEGIN
+   RETURN floor(random()* (high-low + 1) + low);
+END;
+$$ language 'plpgsql' STRICT;
+
+-- STORED PROCEDURE: new_otpcode
+CREATE PROCEDURE new_otpcode (
+    verified_from_email varchar,
+    email_to_verify varchar,
+    "reason_received" varchar
+) LANGUAGE plpgsql AS $$
+BEGIN
+
+INSERT INTO otp_code (email_member, code, reason, used, date) VALUES (email_to_verify, (SELECT random_between(10000,99999)), reason_received, false, now());
+
+INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (verified_from_email, email_to_verify, concat('The OTP code was generated ith the reason of ', reason_received), 'otp_code', (SELECT role FROM member WHERE email = verified_from_email), now());
+COMMIT;
+END;
+$$;
+
 -- STORED PROCEDURE: VERIFY A MEMBER
-CREATE PROCEDURE
-    verify_member (
-        verified_from_email varchar,
-        email_to_verify varchar,
-        verificationStatus boolean
-    ) LANGUAGE plpgsql AS $$
+CREATE PROCEDURE verify_member (
+    verified_from_email varchar,
+    email_to_verify varchar
+) LANGUAGE plpgsql AS $$
 
 BEGIN
 
-UPDATE member set verified = verificationStatus WHERE email = email_to_verify;
-INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (verified_from_email, email_to_verify, concat('MEMBER VERIFICATION STATUS NOW IS ', verificationStatus) , 'member', (SELECT role FROM member WHERE email = verified_from_email), now());
+UPDATE otp_code set used = true WHERE email_member = email_to_verify;
+INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (verified_from_email, email_to_verify, concat('The OTP code was used') , 'otp_code', (SELECT role FROM member WHERE email = verified_from_email), now());
+
+UPDATE member set verified = true WHERE email = email_to_verify;
+INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (verified_from_email, email_to_verify, 'The account member is now verified' , 'member', (SELECT role FROM member WHERE email = verified_from_email), now());
 
 COMMIT;
 END;
 
 $$;
 
-
-CREATE PROCEDURE update_refreshtoken (
-    to_email varchar,
-    new_refreshToken varchar
-) LANGUAGE plpgsql AS $$
+CREATE PROCEDURE update_refreshtoken (to_email varchar, new_refreshToken varchar) LANGUAGE plpgsql AS $$
 
 BEGIN
     UPDATE member SET "refresh_token" = new_refreshToken WHERE email = to_email;
@@ -286,9 +312,7 @@ END;
 
 $$;
 
-CREATE PROCEDURE delete_refreshtoken (
-    to_email varchar
-    ) LANGUAGE plpgsql AS $$
+CREATE PROCEDURE delete_refreshtoken (to_email varchar) LANGUAGE plpgsql AS $$
 
 BEGIN
     UPDATE member SET "refresh_token" = null WHERE email = to_email;
@@ -298,13 +322,12 @@ END;
 $$;
 
 -- STORED PROCEDURE: GENERATE A PREMIUM PAYMENT AND GIVE PREMIUM
-CREATE PROCEDURE
-    create_premium_payment (
-        from_email varchar,
-        to_email varchar,
-        months int,
-        finish_date date
-    ) LANGUAGE plpgsql AS $$
+CREATE PROCEDURE create_premium_payment (
+    from_email varchar,
+    to_email varchar,
+    months int,
+    finish_date date
+) LANGUAGE plpgsql AS $$
 BEGIN
 
 	INSERT INTO payment_membership (email_member, type, months, started, finished, price_month, date_payment)
@@ -328,8 +351,7 @@ END;
 $$;
 
 -- STORED PROCEDURE: GENERATE A LIFETIME PAYMENT AND GIVE LIFETIME
-CREATE PROCEDURE
-    create_lifetime_payment (from_email varchar, to_email varchar) LANGUAGE plpgsql AS $$
+CREATE PROCEDURE create_lifetime_payment (from_email varchar, to_email varchar) LANGUAGE plpgsql AS $$
 BEGIN
 
 	INSERT INTO payment_membership (email_member, type, months, started, finished, price_month, date_payment)
@@ -353,13 +375,12 @@ END;
 $$;
 
 -- STORED PROCEDURE: GIVE A FREE-TRIAL MEMBERSHIP
-CREATE PROCEDURE
-    create_freetrial_payment (
-        from_email varchar,
-        to_email varchar,
-        months int,
-        finish_date date
-    ) LANGUAGE plpgsql AS $$
+CREATE PROCEDURE create_freetrial_payment (
+    from_email varchar,
+    to_email varchar,
+    months int,
+    finish_date date
+) LANGUAGE plpgsql AS $$
 BEGIN
 
 	INSERT INTO payment_membership (email_member, type, months, started, finished, price_month, date_payment)
@@ -383,8 +404,7 @@ END;
 $$;
 
 -- STORED PROCEDURE: GIVE FREE MEMBERSHIP
-CREATE PROCEDURE
-    assign_free_membership (from_email varchar, to_email varchar) LANGUAGE plpgsql AS $$
+CREATE PROCEDURE assign_free_membership (from_email varchar, to_email varchar) LANGUAGE plpgsql AS $$
 BEGIN
 
 	UPDATE membership SET type = 'GRATIS', started = NULL, finished = NULL, status = (SELECT status FROM status_membership WHERE status = 'ACTIVA')
@@ -399,8 +419,7 @@ END;
 $$;
 
 -- STORED PROCEDURE: GIVE ADMIN ROLE
-CREATE PROCEDURE
-    give_admin_role (from_email varchar, to_email varchar) LANGUAGE SQL AS $$
+CREATE PROCEDURE give_admin_role (from_email varchar, to_email varchar) LANGUAGE SQL AS $$
 
 	UPDATE member SET role = 'ADMIN' WHERE email = to_email AND (SELECT role FROM member WHERE email = from_email) = 'ADMIN' ;
 	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, 'ROLE UPDATED TO ADMIN', 'member', (SELECT role FROM member WHERE email = from_email), now());
@@ -410,8 +429,7 @@ CREATE PROCEDURE
 $$;
 
 -- STORED PROCEDURE: GIVE INSPECTOR ROLE
-CREATE PROCEDURE
-    give_inspector_role (from_email varchar, to_email varchar) LANGUAGE SQL AS $$
+CREATE PROCEDURE give_inspector_role (from_email varchar, to_email varchar) LANGUAGE SQL AS $$
 
 	UPDATE member SET role = 'INSPECTOR' WHERE email = to_email;
 	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, 'ROLE UPDATED TO INSPECTOR', 'member', (SELECT role FROM member WHERE email = from_email), now());
@@ -421,44 +439,41 @@ CREATE PROCEDURE
 $$;
 
 -- STORED PROCEDURE: STATUS MEMBERSHIP UPDATER (ACTIVA and INACTIVA)
-CREATE PROCEDURE
-    status_membership_updater (
-        from_email varchar,
-        to_email varchar,
-        new_status varchar
-    ) LANGUAGE SQL AS $$
+CREATE PROCEDURE status_membership_updater (
+    from_email varchar,
+    to_email varchar,
+    new_status varchar
+) LANGUAGE SQL AS $$
 	UPDATE membership SET status = new_status WHERE email_member = to_email AND (SELECT role FROM member WHERE email = from_email) = 'ADMIN';
 	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, CONCAT('STATUS MEMBER WAS UPDATED TO ', new_status), 'membership', (SELECT role FROM member WHERE email = from_email), now());
 
 $$;
 
 -- STORED PROCEDURE: PASSWORD CHANGER
-CREATE PROCEDURE
-    password_changer (
-        from_email varchar,
-        to_email varchar,
-        new_password varchar
-    ) LANGUAGE SQL AS $$
+CREATE PROCEDURE password_changer (
+    from_email varchar,
+    to_email varchar,
+    new_password varchar
+) LANGUAGE SQL AS $$
 	UPDATE member SET password = new_password WHERE email = to_email;
 	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, CONCAT('PASSWORD MEMBER WAS CHANGED TO ', new_password), 'member', (SELECT role FROM member WHERE email = from_email), now());
 $$;
 
 -- STORED PROCEDURE: CUSTOMER REGISTER
-CREATE PROCEDURE
-    customer_register (
-        from_email varchar,
-        to_email varchar,
-        email_customer_param varchar,
-        phonenumber_customer_param BIGINT,
-        notificate_whatsapp_param BOOLEAN,
-        name varchar,
-        lastname varchar,
-        address varchar,
-        sector varchar,
-        house_num varchar,
-        payday INT,
-        payment_concept bigint
-    ) LANGUAGE plpgsql AS $$
+CREATE PROCEDURE customer_register (
+    from_email varchar,
+    to_email varchar,
+    email_customer_param varchar,
+    phonenumber_customer_param BIGINT,
+    notificate_whatsapp_param BOOLEAN,
+    name varchar,
+    lastname varchar,
+    address varchar,
+    sector varchar,
+    house_num varchar,
+    payday INT,
+    payment_concept bigint
+) LANGUAGE plpgsql AS $$
 BEGIN
 	INSERT INTO customer (email_member, email_customer, phone_number, notificate_whatsapp, name, lastname, address, sector, house_number, payday, payment_concept, date) VALUES (to_email, email_customer_param, phonenumber_customer_param, notificate_whatsapp_param, name, lastname, address, sector, house_num, payday, payment_concept, now());
 	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, CONCAT('THE CUSTOMER ', name, ' ', lastname, ' WAS REGISTERED'), 'customer', (SELECT role FROM member WHERE email = from_email), now());
@@ -469,12 +484,11 @@ END;
 $$;
 
 -- STORED PROCEDURE: CUSTOMER REMOVER
-CREATE PROCEDURE
-    customer_remover (
-        from_email varchar,
-        to_email varchar,
-        to_id_customer int
-    ) LANGUAGE plpgsql AS $$
+CREATE PROCEDURE customer_remover (
+    from_email varchar,
+    to_email varchar,
+    to_id_customer int
+) LANGUAGE plpgsql AS $$
 
 BEGIN
 	DELETE FROM receipt WHERE id_customer = to_id_customer AND (SELECT type FROM membership WHERE email_member = from_email) != 'GRATIS';
@@ -489,12 +503,11 @@ END;
 $$;
 
 -- STORED PROCEDURE: CREATE A RECEIPT
-CREATE PROCEDURE
-    create_receipt (
-        from_email varchar,
-        to_email varchar,
-        to_id_customer int
-    ) LANGUAGE plpgsql AS $$
+CREATE PROCEDURE create_receipt (
+    from_email varchar,
+    to_email varchar,
+    to_id_customer int
+) LANGUAGE plpgsql AS $$
 
 BEGIN
 	INSERT INTO receipt (email_member, id_customer, created_at) VALUES (to_email, to_id_customer, now());
@@ -594,15 +607,12 @@ FROM
     payment_membership;
 
 -- -- CREATING ADMIN MEMBER
-UPDATE
-    member
-SET role
-    = 'ADMIN', verified = true
+UPDATE member
+SET role = 'ADMIN',
+verified = true
 WHERE
     email = 'admin@admin.com';
 
-CALL give_admin_role('admin@admin.com', 'admin@admin.com')
+CALL give_admin_role ('admin@admin.com', 'admin@admin.com')
 -- -- -- -- -- ----
-
-
--- SELECT * from member
+-- SELECT * from otp_code

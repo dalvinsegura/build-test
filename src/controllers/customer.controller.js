@@ -75,7 +75,7 @@ export const getCustomer = async (req, res, next) => {
     );
 
     if (customerFounded.rows.length == 0)
-      throw boom.notFound("You don't have customers yet");
+      return res.sendStatus(204);
 
     res.status(200).send(customerFounded.rows);
   } catch (error) {
