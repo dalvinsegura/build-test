@@ -48,7 +48,6 @@ export const verifyEmailByEmail = async (req, res, next) => {
 export const verifyEmailByAdmin = async (req, res, next) => {
   try {
     const emailToVerify = req.body.emailToVerify;
-    const verificationStatus = req.body.verificationStatus;
 
     const memberFound = await pool.query(
       `SELECT verified, role FROM v_member WHERE email = $1`,
@@ -62,17 +61,15 @@ export const verifyEmailByAdmin = async (req, res, next) => {
       if (emailToVerify !== process.env.ADMINEMAIL)
         throw boom.unauthorized("You can't do this!");
 
-      await pool.query(`CALL verify_member($1, $2, $3)`, [
+      await pool.query(`CALL verify_member($1, $2)`, [
         req.memberEmail,
         emailToVerify,
-        verificationStatus,
       ]);
       res.send("This account was verified successfully!");
     } else {
-      await pool.query(`CALL verify_member($1, $2, $3)`, [
+      await pool.query(`CALL verify_member($1, $2)`, [
         req.memberEmail,
-        emailToVerify,
-        verificationStatus,
+        emailToVerify
       ]);
       res.send("This account was verified successfully!");
     }

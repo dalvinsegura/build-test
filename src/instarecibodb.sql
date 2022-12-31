@@ -92,7 +92,7 @@ CREATE TABLE
         "notificate_whatsapp" BOOLEAN,
         "name" varchar(40) NOT NULL,
         "lastname" varchar(40),
-        "address" varchar(40),
+        "address" varchar(120),
         "sector" varchar(40),
         "house_number" varchar(7),
         "payday" INT NOT NULL,
@@ -550,6 +550,7 @@ GROUP BY
     m.lastname,
     m.role,
     m.verified,
+    m.date,
     ms.type,
     ms.started,
     ms.finished,
@@ -571,7 +572,9 @@ SELECT
     r.email_member,
     r.id_customer,
     r.created_at,
-    c.payday
+    c.payday,
+    c."name",
+    c."lastname"
 FROM
     receipt r
     INNER JOIN customer c ON r.id_customer = c.id
@@ -580,7 +583,9 @@ GROUP BY
     r.email_member,
     r.id_customer,
     r.created_at,
-    c.payday;
+    c.payday,
+    c."name",
+    c."lastname";
 
 -- CREATING A VIEW FOR LOGIN HISTORIAL
 CREATE VIEW
@@ -615,4 +620,4 @@ WHERE
 
 CALL give_admin_role ('admin@admin.com', 'admin@admin.com')
 -- -- -- -- -- ----
--- SELECT * from otp_code
+-- SELECT * from login_historial 

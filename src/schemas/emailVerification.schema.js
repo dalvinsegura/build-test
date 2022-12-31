@@ -2,7 +2,6 @@ import Joi from "joi";
 
 const emailToVerify = Joi.string().email();
 const otpCodeInput = Joi.number().integer().max(99999);
-const verificationStatus = Joi.boolean();
 
 export const emailVerification = Joi.object({
   emailToVerify: emailToVerify.required(),
@@ -10,6 +9,5 @@ export const emailVerification = Joi.object({
 });
 
 export const verifyMemberWithAdmin = Joi.object({
-  emailToVerify: emailToVerify.required(),
-  verificationStatus: verificationStatus.required(),
+  emailToVerify: emailToVerify.required()
 });

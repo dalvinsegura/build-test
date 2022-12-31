@@ -117,7 +117,10 @@ export const deleteCustomerById = async (req, res, next) => {
       [req.memberEmail, req.params.customerId]
     );
 
-    if (customerFounded.rows.length == 0)
+    console.log(customerFounded.rows.length)
+    console.log(customerFounded.rows)
+
+    if (customerFounded.rows.length == 0 && req.memberRole !== "ADMIN")
       throw boom.notFound("Customer not found");
 
     await pool.query(`CALL customer_remover($1, $1, $2)`, [

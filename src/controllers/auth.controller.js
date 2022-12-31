@@ -97,7 +97,7 @@ export const signup = async (req, res, next) => {
       });
     };
 
-    mailingHandler(email, name);
+    // mailingHandler(email, name);
 
     // res.json({ token });
     res.status(200).send("You were signed up!");
@@ -130,7 +130,7 @@ export const signin = async (req, res, next) => {
 
     if (!memberFound.rows[0].verified)
       throw boom.forbidden(
-        "Verify your email address, to continue using Instarecibo"
+        "UNVERIFIED EMAIL"
       );
 
     if (memberFound.rows[0].membership_status !== "ACTIVA")
@@ -149,7 +149,7 @@ export const signin = async (req, res, next) => {
 
     // CHECKING IF THE PREMIUM MEMBERS KEEP THEIR MEMBERSHIP ACTIVED
     if (membership_type == "PREMIUM")
-      if (m_finished <= currentDate) {
+      if (m_finished <= currentDate && memberFound.rows[0].role !== "ADMIN") {
         // CHECK IF THE MEMBERSHIP EXPIRED, IT WILL BE UPDATED TO GRATIS
         await pool.query(`CALL assign_free_membership($1, $1);`, [
           req.body.email,

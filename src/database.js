@@ -9,4 +9,3 @@ export const pool = new Pool({
   password: process.env.PASSWORD,
   database: process.env.DATABASE,
 });
-

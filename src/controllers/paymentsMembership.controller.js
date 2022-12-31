@@ -39,15 +39,17 @@ export const generatePremiumPayment = async (req, res, next) => {
     const membershipType = memberData.rows[0].membership_type;
     const verified = memberData.rows[0].verified;
 
-    if (verified === false)
-      throw boom.badRequest("This memeber is unverified");
+    // if (verified === false)
+    //   throw boom.badRequest("This memeber is unverified");
 
     function addMonths(numOfMonths, date = new Date()) {
       date.setMonth(date.getMonth() + numOfMonths);
       return date;
     }
 
+    console.log(months)
     if (membershipType == "PREMIUM")
+      
       throw boom.conflict("You already have a PREMIUM membership");
 
     await pool.query(`call create_premium_payment($1, $2, $3, $4)`, [
