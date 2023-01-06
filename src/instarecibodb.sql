@@ -572,9 +572,12 @@ SELECT
     r.email_member,
     r.id_customer,
     r.created_at,
-    c.payday,
     c."name",
-    c."lastname"
+    c."lastname",
+    c.address,
+    c.sector,
+    c.payday,
+    c.payment_concept
 FROM
     receipt r
     INNER JOIN customer c ON r.id_customer = c.id
@@ -583,9 +586,12 @@ GROUP BY
     r.email_member,
     r.id_customer,
     r.created_at,
-    c.payday,
     c."name",
-    c."lastname";
+    c."lastname",
+    c.address,
+    c.sector,
+    c.payday,
+    c.payment_concept;
 
 -- CREATING A VIEW FOR LOGIN HISTORIAL
 CREATE VIEW
@@ -620,4 +626,4 @@ WHERE
 
 CALL give_admin_role ('admin@admin.com', 'admin@admin.com')
 -- -- -- -- -- ----
--- SELECT * from login_historial 
+-- SELECT * from v_receipts 
