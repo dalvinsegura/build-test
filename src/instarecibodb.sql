@@ -88,8 +88,6 @@ CREATE TABLE
         "id" SERIAL,
         "email_member" varchar NOT NULL,
         "email_customer" varchar NOT NULL,
-        "phone_number" BIGINT NOT NULL,
-        "notificate_whatsapp" BOOLEAN,
         "name" varchar(40) NOT NULL,
         "lastname" varchar(40),
         "address" varchar(120),
@@ -464,8 +462,6 @@ CREATE PROCEDURE customer_register (
     from_email varchar,
     to_email varchar,
     email_customer_param varchar,
-    phonenumber_customer_param BIGINT,
-    notificate_whatsapp_param BOOLEAN,
     name varchar,
     lastname varchar,
     address varchar,
@@ -475,7 +471,7 @@ CREATE PROCEDURE customer_register (
     payment_concept bigint
 ) LANGUAGE plpgsql AS $$
 BEGIN
-	INSERT INTO customer (email_member, email_customer, phone_number, notificate_whatsapp, name, lastname, address, sector, house_number, payday, payment_concept, date) VALUES (to_email, email_customer_param, phonenumber_customer_param, notificate_whatsapp_param, name, lastname, address, sector, house_num, payday, payment_concept, now());
+	INSERT INTO customer (email_member, email_customer, name, lastname, address, sector, house_number, payday, payment_concept, date) VALUES (to_email, email_customer_param,name, lastname, address, sector, house_num, payday, payment_concept, now());
 	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, CONCAT('THE CUSTOMER ', name, ' ', lastname, ' WAS REGISTERED'), 'customer', (SELECT role FROM member WHERE email = from_email), now());
 COMMIT;
 ROLLBACK;
@@ -626,4 +622,4 @@ WHERE
 
 CALL give_admin_role ('admin@admin.com', 'admin@admin.com')
 -- -- -- -- -- ----
--- SELECT * from v_receipts 
+-- SELECT * from v_receipts
