@@ -3,6 +3,6 @@ const router = Router();
 // IMPORTING AUTH CONTROLLERS FILE
 import * as logoutCtrl from "../controllers/logout.controller";
 
-router.get("/", logoutCtrl.handleLogout);
+router.post("/", logoutCtrl.handleLogout);
 
 export default router;

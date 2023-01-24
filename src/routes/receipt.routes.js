@@ -3,6 +3,7 @@ const router = Router();
 
 // IMPORTING MEMBER CONTROLLERS FILE
 import * as receiptCtrl from "../controllers/receipt.controller";
+import * as pdfGeneratorCtrl from "../controllers/pdfGenerator.controller";
 
 // IMPORTING AUTHJWT FOR VALIDATING THE TOKEN THAT IS SENT BY HEADER.
 import { authJwt } from "../middlewares/";
@@ -34,5 +35,8 @@ router.post(
   ],
   receiptCtrl.createReceipt
 );
+
+router.post('/create-pdf', pdfGeneratorCtrl.createPdf);
+router.get('/fetch-pdf', pdfGeneratorCtrl.fetchPdf);
 
 export default router;
