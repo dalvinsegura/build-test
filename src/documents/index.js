@@ -1,5 +1,4 @@
-export const pdfTemplate =  ({ name, price1, price2, receiptId }) => {
-    const today = new Date();
+export const pdfTemplate =  ({ idReceipt, customerFullName, memberFullName, amountDetailed, amountSimplified, date}) => {
 return `
 <!DOCTYPE html>
 <html lang="en">
@@ -17,7 +16,9 @@ return `
     
     .receipt-container{
         width: 95vw;
-        height: 60vh;
+        height: 70%;
+        // max-height: 65vh;
+        // background: #000;
         margin: 5% auto 0;
         padding: 0.7vw;
     
@@ -155,22 +156,22 @@ return `
         <div class="header-receipt-container">
             <h1 class="title-receipt">RECIBO DE DESEMBOLSO</h1>
             <div class="date-and-receiptid">
-                <p class="receiptid">NO. <span>1243</span></p>
-                <p class="date">15 de Enero del 2023</p>
+                <p class="receiptid">NO. <span>${idReceipt}</span></p>
+                <p class="date">${date}</p>
             </div>
         </div>
 
         <div class="data-container">
             <div class="row-data row-1">
                 <h2 class="title-field">HEMEOS ENTREGADO A:
-                <p class="data-field">Dalvin Segura Fernandez</p>
+                <p class="data-field">${customerFullName}</p>
             </div>
 
             <div class="row-data row-2">
                 <h2 class="title-field">LA SUMA DE:
-                <p class="data-field">Tres mil quinientos pesos dominicanos</p>
+                <p class="data-field">${amountDetailed}</p>
                 <h2 class="title-field pesos">PESOS RD$:
-                <p class="data-field not-grow">30,500.00</p>
+                <p class="data-field not-grow">${amountSimplified}</p>
             </div>
 
             <div class="row-data row-2">
@@ -180,7 +181,7 @@ return `
 
             <div class="row-3">
                 <div class="sign sign-1">
-                    <p class="data-field">Juan Alejandro Perez</p>
+                    <p class="data-field">${memberFullName}</p>
                 <h2 class="title-field">FIRMA
                 </div>
 

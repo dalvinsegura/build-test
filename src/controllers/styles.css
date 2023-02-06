@@ -8,10 +8,11 @@
 
 .receipt-container{
     width: 95vw;
-    height: 65vh;
+    height: 65%;
+    /* max-height: 65vh; */
+    /* background: #000; */
     margin: 5% auto 0;
     padding: 0.7vw;
-
     border: #000 0.2vw solid;
     border-radius: 10px;
     font-family: Arial, Helvetica, sans-serif;
