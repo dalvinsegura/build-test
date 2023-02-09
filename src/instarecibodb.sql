@@ -622,5 +622,5 @@ WHERE
 
 CALL give_admin_role ('admin@admin.com', 'admin@admin.com')
 -- -- -- -- -- ----
--- SELECT * from v_receipts
+-- UPDATE membership SET finished = '2023-02-08T22:09:00.000Z' WHERE email_member = 'carmen@carmen.com';
 

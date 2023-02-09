@@ -27,6 +27,7 @@
     "joi": "^17.6.4",
     "jsonwebtoken": "^8.5.1",
     "morgan": "^1.10.0",
+    "net": "^1.0.2",
     "nodemailer": "^6.8.0",
     "pg": "^8.8.0",
     "puppeteer": "^19.6.0"
