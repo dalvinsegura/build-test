@@ -94,7 +94,7 @@ CREATE TABLE
         "sector" varchar(40),
         "house_number" varchar(7),
         "payday" INT NOT NULL,
-        "payment_concept" money,
+        "payment_amount" money,
         "date" TIMESTAMP,
         PRIMARY KEY ("id"),
         CONSTRAINT "FK_customer.email_member" FOREIGN KEY ("email_member") REFERENCES "member" ("email")
@@ -106,6 +106,7 @@ CREATE TABLE
         "id" SERIAL,
         "email_member" varchar NOT NULL,
         "id_customer" INT NOT NULL,
+        "payment_concept" varchar NOT NULL,
         "created_at" TIMESTAMP,
         PRIMARY KEY ("id"),
         CONSTRAINT "FK_receipt.id_customer" FOREIGN KEY ("id_customer") REFERENCES "customer" ("id"),
@@ -468,10 +469,10 @@ CREATE PROCEDURE customer_register (
     sector varchar,
     house_num varchar,
     payday INT,
-    payment_concept bigint
+    payment_amount bigint
 ) LANGUAGE plpgsql AS $$
 BEGIN
-	INSERT INTO customer (email_member, email_customer, name, lastname, address, sector, house_number, payday, payment_concept, date) VALUES (to_email, email_customer_param,name, lastname, address, sector, house_num, payday, payment_concept, now());
+	INSERT INTO customer (email_member, email_customer, name, lastname, address, sector, house_number, payday, payment_amount, date) VALUES (to_email, email_customer_param,name, lastname, address, sector, house_num, payday, payment_amount, now());
 	INSERT INTO database_activity (from_email, to_member, activity, affected_table, role, date) VALUES (from_email, to_email, CONCAT('THE CUSTOMER ', name, ' ', lastname, ' WAS REGISTERED'), 'customer', (SELECT role FROM member WHERE email = from_email), now());
 COMMIT;
 ROLLBACK;
@@ -502,11 +503,12 @@ $$;
 CREATE PROCEDURE create_receipt (
     from_email varchar,
     to_email varchar,
-    to_id_customer int
+    to_id_customer int,
+    new_payment_concept varchar
 ) LANGUAGE plpgsql AS $$
 
 BEGIN
-	INSERT INTO receipt (email_member, id_customer, created_at) VALUES (to_email, to_id_customer, now());
+	INSERT INTO receipt (email_member, id_customer, payment_concept, created_at) VALUES (to_email, to_id_customer, new_payment_concept, now());
 	
 	INSERT INTO database_activity (from_email, "to_member", activity, affected_table, role, date) 
 	VALUES (from_email, to_email, CONCAT('RECEIPT FOR ', (SELECT name FROM customer WHERE id = to_id_customer), ' ', (SELECT lastname FROM customer WHERE id = to_id_customer), ' WAS CREATED'), 'receipt', (SELECT role FROM member WHERE email = from_email), now());
@@ -520,12 +522,36 @@ $$;
 -- -------------------------------------------------------------------------
 -- VIEWS
 -- CREATING A VIEW FOR MEMBER DATA
+DROP VIEW v_member_auth;
+CREATE VIEW
+    v_member_auth AS
+SELECT
+    email,
+    password,
+    m.role,
+    m.verified,
+    ms.type as membership_type,
+    ms.started as membership_started,
+    ms.finished as membership_finished,
+    ms.status as membership_status
+FROM
+    member m
+    INNER JOIN membership ms ON m.email = ms.email_member
+GROUP BY
+    m.email,
+    m.password,
+    m.role,
+    m.verified,
+    ms.type,
+    ms.started,
+    ms.finished,
+    ms.status;
+
 CREATE VIEW
     v_member AS
 SELECT
     m.refresh_token,
     m.email,
-    m.password,
     m.name,
     m.lastname,
     m.role,
@@ -541,7 +567,6 @@ FROM
 GROUP BY
     m.refresh_token,
     m.email,
-    m.password,
     m.name,
     m.lastname,
     m.role,
@@ -567,13 +592,14 @@ SELECT
     r.id,
     r.email_member,
     r.id_customer,
+    r.payment_concept,
     r.created_at,
     c."name",
     c."lastname",
     c.address,
     c.sector,
     c.payday,
-    c.payment_concept
+    c.payment_amount
 FROM
     receipt r
     INNER JOIN customer c ON r.id_customer = c.id
@@ -581,13 +607,14 @@ GROUP BY
     r.id,
     r.email_member,
     r.id_customer,
+    r.payment_concept,
     r.created_at,
     c."name",
     c."lastname",
     c.address,
     c.sector,
     c.payday,
-    c.payment_concept;
+    c.payment_amount;
 
 -- CREATING A VIEW FOR LOGIN HISTORIAL
 CREATE VIEW
@@ -614,13 +641,12 @@ FROM
     payment_membership;
 
 -- -- CREATING ADMIN MEMBER
-UPDATE member
-SET role = 'ADMIN',
-verified = true
-WHERE
-    email = 'admin@admin.com';
+-- UPDATE member
+-- SET role = 'ADMIN',
+-- verified = true
+-- WHERE
+--     email = 'admin@admin.com';
 
-CALL give_admin_role ('admin@admin.com', 'admin@admin.com')
+-- CALL give_admin_role ('admin@admin.com', 'admin@admin.com')
 -- -- -- -- -- ----
 -- UPDATE membership SET finished = '2023-02-08T22:09:00.000Z' WHERE email_member = 'carmen@carmen.com';
-

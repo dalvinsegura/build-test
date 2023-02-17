@@ -25,7 +25,7 @@ export const signup = async (req, res, next) => {
     const { email, password, name, lastname } = req.body;
 
     const memberFound = await pool.query(
-      `SELECT email FROM v_member WHERE email = $1`,
+      `SELECT email FROM v_member_auth WHERE email = $1`,
       [email]
     );
 
@@ -113,9 +113,11 @@ export const signin = async (req, res, next) => {
 
     // VERIFYING IF THE MEMBER EXISTS ON THE DATA BASE
     const memberFound = await pool.query(
-      `SELECT * FROM v_member WHERE email= $1;`,
+      `SELECT * FROM v_member_auth WHERE email= $1;`,
       [email]
     );
+
+    console.log(memberFound);
 
     if (memberFound.rows.length == 0) throw boom.notFound("Member not found");
 

@@ -27,16 +27,12 @@ router.get(
 
 // BY THIS ROUTE YOU WILL REGISTER A NEW CUSTOMER TO THE DB USING THE EMAIL THAT YOU SIGNED IN.
 router.post(
-  "/create/:customerId",
-  [
-    authJwt.verifyToken,
-    validatorHandler(createReceiptBody, "body"),
-    validatorHandler(createReceiptParams, "params")
-  ],
+  "/create/",
+  [authJwt.verifyToken, validatorHandler(createReceiptBody, "body")],
   receiptCtrl.createReceipt
 );
 
-router.post('/create-pdf', pdfGeneratorCtrl.createPdf);
-router.get('/fetch-pdf', pdfGeneratorCtrl.fetchPdf);
+router.post("/create-pdf", pdfGeneratorCtrl.createPdf);
+router.get("/fetch-pdf", pdfGeneratorCtrl.fetchPdf);
 
 export default router;

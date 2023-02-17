@@ -20,7 +20,9 @@ export const getReceipts = async (req, res, next) => {
 export const createReceipt = async (req, res, next) => {
   try {
     const memberEmail = req.memberEmail;
-    const customerId = parseInt(req.params.customerId);
+    const customerId = parseInt(req.body.customerId);
+    const customerPaymentConcept = req.body.customerPaymentConcept;
+
 
     const customerFound = await pool.query(
       `SELECT id, name, lastname FROM v_customers WHERE email_member = $1 AND id = $2`,
@@ -43,16 +45,15 @@ export const createReceipt = async (req, res, next) => {
         "You can only create 10 receipts with the FREE membership"
       );
     } else {
-      await pool.query(`CALL create_receipt($1, $1, $2)`, [
+      await pool.query(`CALL create_receipt($1, $1, $2, $3)`, [
         memberEmail,
         customerId,
+        customerPaymentConcept,
       ]);
 
-      res
-        .status(200)
-        .json({
-          message: `You just created a receipt for ${customerFound.rows[0].name} ${customerFound.rows[0].lastname}`,
-        });
+      res.status(200).json({
+        message: `You just created a receipt for ${customerFound.rows[0].name} ${customerFound.rows[0].lastname}`,
+      });
     }
   } catch (error) {
     next(error);
