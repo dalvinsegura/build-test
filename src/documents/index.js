@@ -1,5 +1,13 @@
-export const pdfTemplate =  ({ idReceipt, customerFullName, memberFullName, amountDetailed, amountSimplified, date}) => {
-return `
+export const pdfTemplate = ({
+  idReceipt,
+  customerFullName,
+  memberFullName,
+  amountDetailed,
+  amountSimplified,
+  paymentConcept,
+  date,
+}) => {
+  return `
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -176,7 +184,7 @@ return `
 
             <div class="row-data row-2">
                 <h2 class="title-field">POR CONCEPTO DE:
-                <p class="data-field">Pago de la casa por el mes de Enero 2023.</p>
+                <p class="data-field">${paymentConcept}</p>
             </div>
 
             <div class="row-3">
